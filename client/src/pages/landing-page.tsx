@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { SubscriptionPlans } from "@/components/subscription/subscription-plans";
 import { 
   ArrowRight, 
   BarChart, 
@@ -120,6 +121,13 @@ export default function LandingPage() {
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <SubscriptionPlans />
         </div>
       </section>
 
