@@ -13,31 +13,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/portfolio", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    try {
-      const userId = req.user!.id;
-      const assets = await storage.getPortfolioAssets(userId);
-      
-      // Fetch real-time market data for each asset
-      const assetsWithMarketData = await Promise.all(assets.map(async (asset) => {
-        try {
-          const marketData = await storage.getMarketData(asset.symbol);
-          return {
-            ...asset,
-            currentPrice: marketData.price,
-            changePercent: marketData.changePercent,
-            value: (parseFloat(asset.quantity) * marketData.price).toString()
-          };
-        } catch (err) {
-          console.error(`Failed to fetch market data for ${asset.symbol}:`, err);
-          return asset;
-        }
-      }));
-      
-      res.json(assetsWithMarketData);
-    } catch (err) {
-      console.error("Failed to fetch portfolio:", err);
-      res.status(500).json({ message: "Failed to fetch portfolio" });
-    }
+    const userId = req.user!.id;
+    const assets = await storage.getPortfolioAssets(userId);
+    res.json(assets);
   });
   
   app.post("/api/portfolio", async (req, res) => {
@@ -127,20 +105,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = req.user!.id;
     
     try {
-      // Get user's portfolio data
-      const portfolio = await storage.getPortfolioAssets(userId);
-      const marketData = await Promise.all(
-        portfolio.map(asset => storage.getMarketData(asset.symbol))
-      );
-      
-      // Use OpenAI API to generate insights
-      const openai = await storage.getAIService();
-      const analysis = await openai.analyze({
-        portfolio,
-        marketData,
-        userId
-      });
-      
+      // In a real app, this would connect to an AI service
+      // For now, we'll create a simple insight
       const newInsight = {
         userId,
         type: "info",
@@ -191,28 +157,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/subscriptions/subscribe", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    const { planId, paymentMethodId } = req.body;
+    const { planId } = req.body;
     const userId = req.user!.id;
     
     try {
-      const plan = await storage.getSubscriptionPlanById(planId);
-      if (!plan) {
-        return res.status(404).json({ message: "Subscription plan not found" });
-      }
-
-      const stripe = await storage.getPaymentProcessor();
-      
-      // Create payment intent
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: parseInt(plan.price) * 100, // Convert to cents
-        currency: 'usd',
-        payment_method: paymentMethodId,
-        confirm: true,
-        customer: req.user!.stripeCustomerId
-      });
-
-      if (paymentIntent.status === 'succeeded') {
-        const subscription = await storage.createSubscription({
+      // In production, integrate with a payment processor here
+      const subscription = await storage.createSubscription({
         userId,
         planId,
         status: "active",
