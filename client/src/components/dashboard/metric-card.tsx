@@ -10,6 +10,7 @@ interface MetricCardProps {
   subValue: string;
   badgeText?: string;
   badgeVariant?: MetricVariant;
+  isLoading?: boolean; // Added isLoading prop
 }
 
 export function MetricCard({
@@ -17,7 +18,8 @@ export function MetricCard({
   value,
   subValue,
   badgeText,
-  badgeVariant = "default"
+  badgeVariant = "default",
+  isLoading = false, // Added default value for isLoading
 }: MetricCardProps) {
   const getBadgeVariant = () => {
     switch (badgeVariant) {
@@ -31,6 +33,22 @@ export function MetricCard({
         return "bg-slate-100 text-slate-800 hover:bg-slate-200";
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="animate-pulse flex space-x-4">
+            <div className="flex-1 space-y-4 py-1">
+              <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+              <div className="h-6 bg-slate-200 rounded"></div>
+            </div>
+            <div className="rounded-full bg-slate-200 h-12 w-12"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

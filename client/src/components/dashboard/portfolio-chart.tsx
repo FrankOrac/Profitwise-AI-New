@@ -16,6 +16,7 @@ export function PortfolioChart({ className }: PortfolioChartProps) {
   const [selectedRange, setSelectedRange] = useState<TimeRange>("1M");
   const [isLoading, setIsLoading] = useState(false);
   const [chartInstance, setChartInstance] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Simulated chart data for different time ranges
   const chartData: Record<TimeRange, { labels: string[], values: number[] }> = {
@@ -44,7 +45,7 @@ export function PortfolioChart({ className }: PortfolioChartProps) {
   const handleRangeChange = (range: TimeRange) => {
     setIsLoading(true);
     setSelectedRange(range);
-    
+
     // Simulate loading
     setTimeout(() => {
       setIsLoading(false);
@@ -53,18 +54,18 @@ export function PortfolioChart({ className }: PortfolioChartProps) {
 
   useEffect(() => {
     if (!chartRef.current) return;
-    
+
     // Clean up previous chart instance
     if (chartInstance) {
       chartInstance.destroy();
     }
-    
+
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
-    
+
     try {
       const data = chartData[selectedRange];
-      
+
       const newChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -106,18 +107,34 @@ export function PortfolioChart({ className }: PortfolioChartProps) {
           }
         }
       });
-      
+
       setChartInstance(newChartInstance);
     } catch (err) {
+      setError("Failed to create chart");
       console.error('Failed to create chart', err);
     }
-    
+
     return () => {
       if (chartInstance) {
         chartInstance.destroy();
       }
     };
   }, [selectedRange]);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    try {
+      // Chart initialization code (already in the above useEffect)
+    } catch (err) {
+      setError("Failed to initialize chart");
+      console.error(err);
+    }
+  }, []);
+
+  if (error) {
+    return <div className="text-error">{error}</div>;
+  }
 
   return (
     <Card className={className}>
@@ -142,7 +159,7 @@ export function PortfolioChart({ className }: PortfolioChartProps) {
             ))}
           </div>
         </div>
-        
+
         <div className="w-full h-[300px] relative">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">

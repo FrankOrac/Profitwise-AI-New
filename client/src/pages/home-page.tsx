@@ -23,8 +23,15 @@ export default function HomePage() {
   const { user } = useAuth();
   const isMobile = useIsMobile(); // Fixed hook name
 
-  const { data: educationContent = [] } = useQuery<EducationalContent[]>({
+  const { data: educationContent = [], isError: educationError } = useQuery<EducationalContent[]>({
     queryKey: ["/api/education"],
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to load educational content",
+        variant: "destructive",
+      });
+    }
   });
 
   return (

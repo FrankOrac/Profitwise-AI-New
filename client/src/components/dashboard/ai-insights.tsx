@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowUpRight, AlertTriangle, Lightbulb, Loader2 } from "lucide-react";
 import { AiInsight } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 
 type InsightType = "buy" | "warning" | "info";
 
@@ -15,13 +15,14 @@ interface AiInsightsProps {
 }
 
 export function AiInsights({ className }: AiInsightsProps) {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [generating, setGenerating] = useState(false);
-  
-  const { data: insights = [], isLoading } = useQuery<AiInsight[]>({
+
+  const { data: insights = [], isLoading } = useQuery({
     queryKey: ["/api/insights"],
   });
-  
+
   const generateMutation = useMutation({
     mutationFn: async () => {
       setGenerating(true);
@@ -45,11 +46,16 @@ export function AiInsights({ className }: AiInsightsProps) {
       setGenerating(false);
     },
   });
-  
+
   const handleGenerateInsight = () => {
     generateMutation.mutate();
   };
-  
+
+  const refreshInsights = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/insights"] });
+  };
+
+
   const getInsightIcon = (type: InsightType) => {
     switch (type) {
       case "buy":
@@ -62,7 +68,7 @@ export function AiInsights({ className }: AiInsightsProps) {
         return <Lightbulb className="h-4 w-4 text-primary-700" />;
     }
   };
-  
+
   const getInsightColor = (type: InsightType) => {
     switch (type) {
       case "buy":
@@ -75,7 +81,7 @@ export function AiInsights({ className }: AiInsightsProps) {
         return "border-slate-200 bg-slate-50";
     }
   };
-  
+
   const getIconBackground = (type: InsightType) => {
     switch (type) {
       case "buy":
@@ -88,7 +94,7 @@ export function AiInsights({ className }: AiInsightsProps) {
         return "bg-slate-100";
     }
   };
-  
+
   const getTitleColor = (type: InsightType) => {
     switch (type) {
       case "buy":
@@ -107,12 +113,13 @@ export function AiInsights({ className }: AiInsightsProps) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold">AI Investment Insights</h2>
+          <Button onClick={refreshInsights} variant="ghost">Refresh</Button>
           <Badge className="text-xs px-2.5 py-1 rounded-full font-medium bg-primary-50 text-primary-700 flex items-center">
             <Lightbulb className="h-3 w-3 mr-1.5" />
             Generated Just Now
           </Badge>
         </div>
-        
+
         {isLoading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
@@ -143,7 +150,7 @@ export function AiInsights({ className }: AiInsightsProps) {
             ))}
           </div>
         )}
-        
+
         <div className="mt-6">
           <Button 
             className="w-full"

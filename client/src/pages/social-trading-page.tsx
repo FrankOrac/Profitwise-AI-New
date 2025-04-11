@@ -274,7 +274,19 @@ export default function SocialTradingPage() {
                                     <div className="text-xs text-slate-500">{trader.performance} • {trader.followers.toLocaleString()} followers</div>
                                   </div>
                                 </div>
-                                <Button size="sm" variant="outline">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    // Update follow status
+                                    trader.followers += 1;
+                                    // Show success message
+                                    toast({
+                                      title: "Success",
+                                      description: `You are now following ${trader.name}`,
+                                    });
+                                  }}
+                                >
                                   <UserPlus className="h-3 w-3 mr-1" />
                                   Follow
                                 </Button>
