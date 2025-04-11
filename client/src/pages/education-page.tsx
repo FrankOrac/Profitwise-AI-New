@@ -153,7 +153,7 @@ export default function EducationPage() {
                     </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Difficulties</SelectItem>
+                    <SelectItem value="all">All Difficulties</SelectItem>
                     <SelectItem value="Beginner">Beginner</SelectItem>
                     <SelectItem value="Intermediate">Intermediate</SelectItem>
                     <SelectItem value="Advanced">Advanced</SelectItem>
