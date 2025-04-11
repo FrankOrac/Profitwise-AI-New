@@ -213,14 +213,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (paymentIntent.status === 'succeeded') {
         const subscription = await storage.createSubscription({
-        userId,
-        planId,
-        status: "active",
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-      });
-      
-      res.status(201).json(subscription);
+          userId,
+          planId,
+          status: "active",
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+        });
+        
+        res.status(201).json(subscription);
+      } else {
+        res.status(400).json({ message: "Payment failed" });
+      }
     } catch (err) {
       res.status(500).json({ message: "Failed to create subscription" });
     }
