@@ -61,6 +61,103 @@ export default function AdminDashboard() {
     refetchInterval: 30000,
   });
 
+  const { data: tasks } = useQuery({
+    queryKey: ["/api/admin/tasks"],
+    refetchInterval: 60000,
+  });
+
+  const { data: activityLogs } = useQuery({
+    queryKey: ["/api/admin/activity-logs"],
+    refetchInterval: 30000,
+  });
+
+  const statusColors = {
+    pending: "bg-yellow-100 text-yellow-800",
+    inProgress: "bg-blue-100 text-blue-800",
+    completed: "bg-green-100 text-green-800",
+    blocked: "bg-red-100 text-red-800"
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+      <div className="lg:col-span-2 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Platform Metrics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <MetricCard
+                title="Total Users"
+                value={analytics?.totalUsers || 0}
+                trend="+12%"
+                icon={<Users className="w-6 h-6" />}
+              />
+              <MetricCard
+                title="Active Users"
+                value={analytics?.activeUsers || 0}
+                trend="+5%"
+                icon={<Activity className="w-6 h-6" />}
+              />
+              <MetricCard
+                title="Total Revenue"
+                value={`$${analytics?.totalRevenue || 0}`}
+                trend="+8%"
+                icon={<DollarSign className="w-6 h-6" />}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {activityLogs?.map((log, i) => (
+                <div key={i} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <div>
+                    <p className="text-sm font-medium">{log.action}</p>
+                    <p className="text-xs text-slate-500">{log.timestamp}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {tasks?.map((task, i) => (
+                <div key={i} className="p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">{task.title}</h4>
+                    <span className={`px-2 py-1 rounded text-xs ${statusColors[task.status]}`}>
+                      {task.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-600">{task.description}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Calendar className="w-4 h-4 text-slate-400" />
+                    <span className="text-xs text-slate-500">{task.dueDate}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  });
+
   const { data: revenueData } = useQuery({
     queryKey: ["/api/admin/analytics/revenue"],
     refetchInterval: 60000,

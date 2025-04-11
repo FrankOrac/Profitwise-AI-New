@@ -380,6 +380,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes for user management
+  app.get("/api/admin/tasks", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const tasks = await storage.getAdminTasks();
+      res.json(tasks);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch tasks" });
+    }
+  });
+
+  app.get("/api/admin/activity-logs", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const logs = await storage.getActivityLogs();
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch activity logs" });
+    }
+  });
+
   app.get("/api/admin/users", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
