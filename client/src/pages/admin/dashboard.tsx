@@ -66,11 +66,6 @@ export default function AdminDashboard() {
     refetchInterval: 60000,
   });
 
-  const { data: activityLogs } = useQuery({
-    queryKey: ["/api/admin/activity-logs"],
-    refetchInterval: 30000,
-  });
-
   const statusColors = {
     pending: "bg-yellow-100 text-yellow-800",
     inProgress: "bg-blue-100 text-blue-800",
@@ -158,13 +153,8 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const { data: revenueData } = useQuery({
-    queryKey: ["/api/admin/analytics/revenue"],
-    refetchInterval: 60000,
-  });
-  
   useEffect(() => {
-    if (!revenueChartRef.current || !revenueData) return;
+    if (!revenueChartRef.current) return;
     
     if (revenueChartInstance) {
       revenueChartInstance.destroy();
