@@ -17,6 +17,7 @@ import {
   Filter
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { useToast } from "@/hooks/use-toast";
 
 type Trader = {
   id: string;
@@ -51,6 +52,8 @@ type TradePost = {
 };
 
 export default function SocialTradingPage() {
+  const toast = useToast(); // Access the toast function from the hook
+
   // Mock data for top traders
   const topTraders: Trader[] = [
     {
@@ -87,7 +90,7 @@ export default function SocialTradingPage() {
       biography: "Day trader and market analyst. I share daily insights on market trends and trading opportunities."
     }
   ];
-  
+
   // Mock data for trade posts
   const tradePosts: TradePost[] = [
     {
@@ -174,14 +177,14 @@ export default function SocialTradingPage() {
                   </Button>
                 </div>
               </div>
-              
+
               <Tabs defaultValue="feed">
                 <TabsList className="mb-6">
                   <TabsTrigger value="feed">Trading Feed</TabsTrigger>
                   <TabsTrigger value="traders">Top Traders</TabsTrigger>
                   <TabsTrigger value="following">Following</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="feed">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
@@ -244,7 +247,7 @@ export default function SocialTradingPage() {
                         </Card>
                       ))}
                     </div>
-                    
+
                     <div className="space-y-6">
                       <Card>
                         <CardHeader>
@@ -300,7 +303,7 @@ export default function SocialTradingPage() {
                           </div>
                         </CardContent>
                       </Card>
-                      
+
                       <Card>
                         <CardHeader>
                           <CardTitle>Top Performing Assets</CardTitle>
@@ -359,7 +362,7 @@ export default function SocialTradingPage() {
                     </div>
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="traders">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {topTraders.map((trader) => (
@@ -399,7 +402,15 @@ export default function SocialTradingPage() {
                               </div>
                             </div>
                             <div className="flex gap-2 w-full">
-                              <Button className="flex-1">
+                              <Button className="flex-1" onClick={() => {
+                                    // Update follow status
+                                    trader.followers += 1;
+                                    // Show success message
+                                    toast({
+                                      title: "Success",
+                                      description: `You are now following ${trader.name}`,
+                                    });
+                                  }}>
                                 <UserPlus className="h-4 w-4 mr-2" />
                                 Follow
                               </Button>
@@ -414,7 +425,7 @@ export default function SocialTradingPage() {
                     ))}
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="following">
                   <Card>
                     <CardContent className="p-6 flex flex-col items-center">
