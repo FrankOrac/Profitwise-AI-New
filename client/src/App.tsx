@@ -13,6 +13,14 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "./hooks/use-auth";
 import { useEffect, useState } from "react";
 
+// Import placeholder pages
+import ProfilePage from "@/pages/profile-page";
+import SettingsPage from "@/pages/settings-page";
+import SubscriptionPage from "@/pages/subscription-page";
+import WalletsPage from "@/pages/wallets-page";
+import SocialTradingPage from "@/pages/social-trading-page";
+import TutorialsPage from "@/pages/tutorials-page";
+
 // Simple component to display during loading
 function LoadingScreen() {
   return (
@@ -104,6 +112,24 @@ function AppWithAuth() {
       </Route>
       <Route path="/education">
         <ProtectedRoute component={EducationPage} />
+      </Route>
+      <Route path="/wallets">
+        <ProtectedRoute component={WalletsPage} />
+      </Route>
+      <Route path="/social">
+        <ProtectedRoute component={SocialTradingPage} />
+      </Route>
+      <Route path="/tutorials">
+        <ProtectedRoute component={TutorialsPage} />
+      </Route>
+      <Route path="/profile">
+        <ProtectedRoute component={ProfilePage} />
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute component={SettingsPage} />
+      </Route>
+      <Route path="/subscription">
+        <ProtectedRoute component={SubscriptionPage} />
       </Route>
       <Route path="/admin/users">
         <ProtectedRoute component={AdminUsersPage} adminOnly={true} />
