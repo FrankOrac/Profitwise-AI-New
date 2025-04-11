@@ -126,3 +126,64 @@ export type EducationalContent = typeof educationalContent.$inferSelect;
 
 export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+import { pgTable, serial, text, timestamp, boolean, integer, decimal } from 'drizzle-orm/pg-core';
+
+// User management
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  email: text('email').notNull().unique(),
+  password: text('password').notNull(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  role: text('role').default('user').notNull(),
+  subscriptionTier: text('subscription_tier').default('basic').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Portfolio assets
+export const portfolioAssets = pgTable('portfolio_assets', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  symbol: text('symbol').notNull(),
+  quantity: decimal('quantity').notNull(),
+  purchasePrice: decimal('purchase_price').notNull(),
+  currentPrice: decimal('current_price').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// AI Insights
+export const aiInsights = pgTable('ai_insights', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  type: text('type').notNull(),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  icon: text('icon').notNull(),
+  status: text('status').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Educational content
+export const educationalContent = pgTable('educational_content', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  category: text('category').notNull(),
+  difficulty: text('difficulty').notNull(),
+  duration: text('duration').notNull(),
+  instructor: text('instructor').notNull(),
+  videoUrl: text('video_url'),
+  imageUrl: text('image_url'),
+  rating: decimal('rating'),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Subscription plans
+export const subscriptionPlans = pgTable('subscription_plans', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  price: text('price').notNull(),
+  description: text('description').notNull(),
+  features: text('features').array().notNull()
+});
