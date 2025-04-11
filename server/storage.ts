@@ -266,11 +266,30 @@ export class MemStorage implements IStorage {
     return this.educationalContentData.get(id);
   }
   
+  async getRelatedContent(category: string, excludeId: number): Promise<EducationalContent[]> {
+    return Array.from(this.educationalContentData.values())
+      .filter(content => content.category === category && content.id !== excludeId)
+      .slice(0, 3);
+  }
+  
   async addEducationalContent(content: InsertEducationalContent): Promise<EducationalContent> {
     const id = this.currentId.educationalContent++;
     const newContent: EducationalContent = { ...content, id };
     this.educationalContentData.set(id, newContent);
     return newContent;
+  }
+
+  async updateEducationalContent(id: number, contentData: Partial<EducationalContent>): Promise<EducationalContent | undefined> {
+    const content = this.educationalContentData.get(id);
+    if (!content) return undefined;
+    
+    const updatedContent = { ...content, ...contentData };
+    this.educationalContentData.set(id, updatedContent);
+    return updatedContent;
+  }
+
+  async deleteEducationalContent(id: number): Promise<boolean> {
+    return this.educationalContentData.delete(id);
   }
   
   // Subscription plans operations

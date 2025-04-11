@@ -164,8 +164,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API routes for educational content
   app.get("/api/education", async (req, res) => {
-    const content = await storage.getAllEducationalContent();
-    res.json(content);
+    try {
+      const content = await storage.getAllEducationalContent();
+      const { category, difficulty, search } = req.query;
+      
+      let filteredContent = content;
+      
+      if (category) {
+        filteredContent = filteredContent.filter(c => c.category === category);
+      }
+      if (difficulty) {
+        filteredContent = filteredContent.filter(c => c.difficulty === difficulty);
+      }
+      if (search) {
+        const searchStr = search.toString().toLowerCase();
+        filteredContent = filteredContent.filter(c => 
+          c.title.toLowerCase().includes(searchStr) || 
+          c.description.toLowerCase().includes(searchStr)
+        );
+      }
+      
+      res.json(filteredContent);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch educational content" });
+    }
   });
   
   app.get("/api/education/:id", async (req, res) => {
@@ -174,12 +196,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Invalid content ID" });
     }
     
-    const content = await storage.getEducationalContentById(contentId);
-    if (!content) {
-      return res.status(404).json({ message: "Content not found" });
+    try {
+      const content = await storage.getEducationalContentById(contentId);
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      
+      // Get related content in same category
+      const relatedContent = await storage.getRelatedContent(content.category, contentId);
+      
+      res.json({ content, relatedContent });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch content" });
     }
-    
-    res.json(content);
+  });
+
+  // Admin routes for educational content management
+  app.post("/api/admin/education", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const newContent = await storage.addEducationalContent(req.body);
+      res.status(201).json(newContent);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create content" });
+    }
+  });
+
+  app.put("/api/admin/education/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+
+    const contentId = parseInt(req.params.id);
+    if (isNaN(contentId)) {
+      return res.status(400).json({ message: "Invalid content ID" });
+    }
+
+    try {
+      const updatedContent = await storage.updateEducationalContent(contentId, req.body);
+      if (!updatedContent) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      res.json(updatedContent);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update content" });
+    }
+  });
+
+  app.delete("/api/admin/education/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+
+    const contentId = parseInt(req.params.id);
+    if (isNaN(contentId)) {
+      return res.status(400).json({ message: "Invalid content ID" });
+    }
+
+    try {
+      const deleted = await storage.deleteEducationalContent(contentId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete content" });
+    }
   });
   
   // API routes for subscription plans
