@@ -89,8 +89,8 @@ export default function HomePage() {
             <div className="mb-8">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold">Educational Resources</h2>
-                <Link href="/education">
-                  <a className="text-primary-600 text-sm font-medium">View All</a>
+                <Link href="/education" className="text-primary-600 text-sm font-medium">
+                  View All
                 </Link>
               </div>
               
