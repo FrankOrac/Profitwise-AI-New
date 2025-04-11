@@ -49,8 +49,28 @@ const MetricCard = ({ title, value, icon, trend, positive = true }: MetricCardPr
 );
 
 export default function AdminDashboard() {
+  // Fetch users with real-time metrics
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Fetch revenue metrics
+  const { data: revenueMetrics } = useQuery({
+    queryKey: ["/api/admin/metrics/revenue"],
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  // Fetch real-time activity logs
+  const { data: activityLogs } = useQuery({
+    queryKey: ["/api/admin/activity-logs"],
+    refetchInterval: 15000, // Refresh every 15 seconds
+  });
+
+  // Fetch task management data
+  const { data: tasks } = useQuery({
+    queryKey: ["/api/admin/tasks"],
+    refetchInterval: 30000,
   });
   
   const usersBySubscription = {
