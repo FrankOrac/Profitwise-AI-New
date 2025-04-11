@@ -209,7 +209,7 @@ export default function AdminUsersPage() {
                         </div>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Roles</SelectItem>
+                        <SelectItem value="all">All Roles</SelectItem>
                         {roles.map(role => (
                           <SelectItem key={role} value={role}>{role}</SelectItem>
                         ))}
@@ -227,7 +227,7 @@ export default function AdminUsersPage() {
                         </div>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Subscriptions</SelectItem>
+                        <SelectItem value="all">All Subscriptions</SelectItem>
                         {subscriptionTiers.map(tier => (
                           <SelectItem key={tier} value={tier}>{tier}</SelectItem>
                         ))}
