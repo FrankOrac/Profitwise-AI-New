@@ -21,6 +21,8 @@ import SubscriptionPage from "@/pages/subscription-page";
 import WalletsPage from "@/pages/wallets-page";
 import SocialTradingPage from "@/pages/social-trading-page";
 import TutorialsPage from "@/pages/tutorials-page";
+import FrontendManagement from "./pages/admin/frontend-management"; // Added import for FrontendManagement
+
 
 // Simple component to display during loading
 function LoadingScreen() {
@@ -141,6 +143,9 @@ function AppWithAuth() {
       <Route path="/admin/dashboard">
         <ProtectedRoute component={AdminDashboard} adminOnly={true} />
       </Route>
+      <Route path="/admin/frontend">
+        <ProtectedRoute component={FrontendManagement} adminOnly={true} />
+      </Route> {/* Added route for FrontendManagement */}
       <Route>
         <NotFound />
       </Route>
