@@ -135,24 +135,24 @@ export default function AdminUsersPage() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "admin":
-        return "bg-primary-100 text-primary-700 border-primary-200";
+        return "bg-primary-100 text-primary-700 border-primary-200 dark:bg-primary-950 dark:text-primary-300 dark:border-primary-900";
       case "moderator":
-        return "bg-purple-100 text-purple-700 border-purple-200";
+        return "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-900";
       default:
-        return "bg-slate-100 text-slate-700 border-slate-200";
+        return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
     }
   };
   
   const getSubscriptionBadgeColor = (tier: string) => {
     switch (tier) {
       case "basic":
-        return "bg-slate-100 text-slate-700 border-slate-200";
+        return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
       case "pro":
-        return "bg-success/10 text-success border-success/20";
+        return "bg-success/10 text-success border-success/20 dark:bg-success/20 dark:text-success/80 dark:border-success/30";
       case "enterprise":
-        return "bg-purple-100 text-purple-700 border-purple-200";
+        return "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-900";
       default:
-        return "bg-slate-100 text-slate-700 border-slate-200";
+        return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
     }
   };
   
