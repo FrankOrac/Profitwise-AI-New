@@ -139,6 +139,10 @@ export default function AuthPage() {
         {/* Form Section */}
         <div className="flex flex-col justify-center items-center p-6 md:p-10 bg-background">
           <div className="w-full max-w-md">
+            <Link href="/" className="inline-flex items-center text-sm mb-6 text-muted-foreground hover:text-primary transition-colors">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back to Home
+            </Link>
             <div className="flex items-center gap-2 mb-8">
               <div className="bg-primary-600 text-white w-8 h-8 rounded-md flex items-center justify-center">
                 <PieChart className="h-5 w-5" />
