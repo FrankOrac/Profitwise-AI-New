@@ -14,14 +14,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { EducationalContent } from "@shared/schema";
 import MobileSidebar from "@/components/ui/mobile-sidebar"; // Added import
-import { useMobile } from "@/hooks/use-mobile"; // Added import
+import { useIsMobile } from "@/hooks/use-mobile"; // Fixed import name
 import { useLocation } from "wouter"; // Added import
 
 
 export default function HomePage() {
   const [location] = useLocation();
   const { user } = useAuth();
-  const isMobile = useMobile(); // Added useMobile hook
+  const isMobile = useIsMobile(); // Fixed hook name
 
   const { data: educationContent = [] } = useQuery<EducationalContent[]>({
     queryKey: ["/api/education"],
