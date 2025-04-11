@@ -1,0 +1,111 @@
+import { Helmet } from "react-helmet";
+import Sidebar from "@/components/ui/sidebar";
+import Header from "@/components/header";
+import MetricCard from "@/components/dashboard/metric-card";
+import PortfolioChart from "@/components/dashboard/portfolio-chart";
+import AllocationChart from "@/components/dashboard/allocation-chart";
+import AiInsights from "@/components/dashboard/ai-insights";
+import TopPerformers from "@/components/dashboard/top-performers";
+import EducationCard from "@/components/education/education-card";
+import SubscriptionPlans from "@/components/subscription/subscription-plans";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
+import { EducationalContent } from "@shared/schema";
+
+export default function HomePage() {
+  const { user } = useAuth();
+  
+  const { data: educationContent = [] } = useQuery<EducationalContent[]>({
+    queryKey: ["/api/education"],
+  });
+  
+  return (
+    <>
+      <Helmet>
+        <title>Dashboard | ProfitWise AI</title>
+      </Helmet>
+      
+      <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] min-h-screen">
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
+        
+        <div className="flex flex-col">
+          <Header />
+          
+          <main className="bg-slate-50 p-6 flex-1 overflow-y-auto">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold mb-2">Dashboard Overview</h1>
+              <p className="text-slate-500">
+                Welcome back, {user?.firstName || user?.username}. Here's your financial summary.
+              </p>
+            </div>
+            
+            {/* Key Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <MetricCard 
+                title="Portfolio Value" 
+                value="$32,594.23" 
+                subValue="+$782.14 today" 
+                badgeText="+2.4%" 
+                badgeVariant="success" 
+              />
+              <MetricCard 
+                title="Total Assets" 
+                value="$29,152.89" 
+                subValue="Across 3 platforms" 
+                badgeText="12" 
+              />
+              <MetricCard 
+                title="Cash Balance" 
+                value="$3,441.34" 
+                subValue="10.56% of portfolio" 
+                badgeText="Low" 
+                badgeVariant="warning" 
+              />
+              <MetricCard 
+                title="Risk Score" 
+                value="68/100" 
+                subValue="Balanced allocation" 
+                badgeText="Moderate" 
+                badgeVariant="info" 
+              />
+            </div>
+            
+            {/* Portfolio Performance and Allocation */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <PortfolioChart className="lg:col-span-2" />
+              <AllocationChart />
+            </div>
+            
+            {/* AI Insights and Top Performers */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <AiInsights />
+              <TopPerformers />
+            </div>
+            
+            {/* Educational Content */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg font-bold">Educational Resources</h2>
+                <Link href="/education">
+                  <a className="text-primary-600 text-sm font-medium">View All</a>
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {educationContent.slice(0, 3).map((content) => (
+                  <EducationCard key={content.id} content={content} />
+                ))}
+              </div>
+            </div>
+            
+            {/* Subscription Plans */}
+            <SubscriptionPlans />
+          </main>
+        </div>
+      </div>
+    </>
+  );
+}
