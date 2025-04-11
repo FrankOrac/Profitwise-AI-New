@@ -27,17 +27,20 @@ interface NavItemProps {
 const NavItem: FC<NavItemProps> = ({ icon, label, href, isActive }) => {
   return (
     <li>
-      <Link href={href}>
-        <a className={cn(
-          "flex items-center px-3 py-2 text-sm font-medium rounded-md",
+      <div
+        className={cn(
+          "flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer",
           isActive 
             ? "bg-primary-50 text-primary-600" 
             : "text-slate-700 hover:bg-slate-100"
-        )}>
-          {icon}
-          {label}
-        </a>
-      </Link>
+        )}
+        onClick={() => {
+          window.location.href = href;
+        }}
+      >
+        {icon}
+        {label}
+      </div>
     </li>
   );
 };
@@ -181,23 +184,27 @@ export function Sidebar({ closeMobileSidebar }: SidebarProps) {
       </nav>
       
       <div className="p-4 border-t border-slate-200">
-        <Link href="/profile" onClick={handleLinkClick}>
-          <a className="flex items-center text-sm font-medium text-slate-700">
-            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center mr-2">
-              <span className="text-primary-700">
-                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U'}
-              </span>
+        <div 
+          className="flex items-center text-sm font-medium text-slate-700 cursor-pointer"
+          onClick={() => {
+            window.location.href = "/profile";
+            if (handleLinkClick) handleLinkClick();
+          }}
+        >
+          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center mr-2">
+            <span className="text-primary-700">
+              {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+            </span>
+          </div>
+          <div>
+            <div className="font-medium">
+              {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.username}
             </div>
-            <div>
-              <div className="font-medium">
-                {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.username}
-              </div>
-              <div className="text-xs text-slate-500">
-                {user?.subscriptionTier === 'basic' ? 'Basic Plan' : user?.subscriptionTier === 'pro' ? 'Pro Plan' : 'Enterprise Plan'}
-              </div>
+            <div className="text-xs text-slate-500">
+              {user?.subscriptionTier === 'basic' ? 'Basic Plan' : user?.subscriptionTier === 'pro' ? 'Pro Plan' : 'Enterprise Plan'}
             </div>
-          </a>
-        </Link>
+          </div>
+        </div>
       </div>
     </aside>
   );

@@ -64,12 +64,17 @@ export default function SubscriptionPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <ul className="space-y-2">
-                            {Array.isArray(features) && features.map((feature, i) => (
+                            {Array.isArray(features) ? features.map((feature, i) => (
                               <li key={i} className="flex gap-2">
                                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                                <span>{feature}</span>
+                                <span>{typeof feature === 'string' ? feature : JSON.stringify(feature)}</span>
                               </li>
-                            ))}
+                            )) : (
+                              <li className="flex gap-2">
+                                <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                                <span>Plan features</span>
+                              </li>
+                            )}
                           </ul>
                         </CardContent>
                         <CardFooter>
