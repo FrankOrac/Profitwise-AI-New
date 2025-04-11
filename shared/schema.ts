@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   lastName: text("last_name"),
   role: text("role").default("user").notNull(),
   subscriptionTier: text("subscription_tier").default("basic").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -29,11 +30,13 @@ export const portfolioAssets = pgTable("portfolio_assets", {
   symbol: text("symbol").notNull(),
   name: text("name").notNull(),
   type: text("type").notNull(),
-  quantity: text("quantity").notNull(),
-  currentPrice: text("current_price").notNull(),
-  value: text("value").notNull(),
-  changePercent: text("change_percent").notNull(),
+  quantity: decimal("quantity").notNull(),
+  purchasePrice: decimal("purchase_price").notNull(),
+  currentPrice: decimal("current_price").notNull(),
+  value: decimal("value").notNull(),
+  changePercent: decimal("change_percent").notNull(),
   icon: text("icon"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertPortfolioAssetSchema = createInsertSchema(portfolioAssets).pick({
@@ -55,9 +58,9 @@ export const aiInsights = pgTable("ai_insights", {
   type: text("type").notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  icon: text("icon"),
+  icon: text("icon").notNull(),
   status: text("status").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertAiInsightSchema = createInsertSchema(aiInsights).pick({
@@ -77,9 +80,12 @@ export const educationalContent = pgTable("educational_content", {
   category: text("category").notNull(),
   difficulty: text("difficulty").notNull(),
   duration: text("duration").notNull(),
+  instructor: text("instructor").notNull(),
   imageUrl: text("image_url"),
   videoUrl: text("video_url"),
+  rating: decimal("rating"),
   accessTier: text("access_tier").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertEducationalContentSchema = createInsertSchema(educationalContent).pick({
@@ -100,7 +106,7 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   price: text("price").notNull(),
   description: text("description").notNull(),
   features: jsonb("features").notNull(),
-  isPopular: boolean("is_popular").default(false),
+  isPopular: boolean("is_popular").default(false)
 });
 
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).pick({
@@ -126,64 +132,3 @@ export type EducationalContent = typeof educationalContent.$inferSelect;
 
 export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
-import { pgTable, serial, text, timestamp, boolean, integer, decimal } from 'drizzle-orm/pg-core';
-
-// User management
-export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  username: text('username').notNull().unique(),
-  email: text('email').notNull().unique(),
-  password: text('password').notNull(),
-  firstName: text('first_name'),
-  lastName: text('last_name'),
-  role: text('role').default('user').notNull(),
-  subscriptionTier: text('subscription_tier').default('basic').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull()
-});
-
-// Portfolio assets
-export const portfolioAssets = pgTable('portfolio_assets', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull(),
-  symbol: text('symbol').notNull(),
-  quantity: decimal('quantity').notNull(),
-  purchasePrice: decimal('purchase_price').notNull(),
-  currentPrice: decimal('current_price').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull()
-});
-
-// AI Insights
-export const aiInsights = pgTable('ai_insights', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull(),
-  type: text('type').notNull(),
-  title: text('title').notNull(),
-  content: text('content').notNull(),
-  icon: text('icon').notNull(),
-  status: text('status').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull()
-});
-
-// Educational content
-export const educationalContent = pgTable('educational_content', {
-  id: serial('id').primaryKey(),
-  title: text('title').notNull(),
-  description: text('description').notNull(),
-  category: text('category').notNull(),
-  difficulty: text('difficulty').notNull(),
-  duration: text('duration').notNull(),
-  instructor: text('instructor').notNull(),
-  videoUrl: text('video_url'),
-  imageUrl: text('image_url'),
-  rating: decimal('rating'),
-  createdAt: timestamp('created_at').defaultNow().notNull()
-});
-
-// Subscription plans
-export const subscriptionPlans = pgTable('subscription_plans', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  price: text('price').notNull(),
-  description: text('description').notNull(),
-  features: text('features').array().notNull()
-});
