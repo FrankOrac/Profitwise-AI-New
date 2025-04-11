@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -123,9 +123,9 @@ export default function AuthPage() {
     }, 2000);
   };
   
-  // If user is already logged in, redirect to home
+  // If user is already logged in, redirect to dashboard
   if (user) {
-    navigate("/");
+    navigate("/home");
     return null;
   }
   
