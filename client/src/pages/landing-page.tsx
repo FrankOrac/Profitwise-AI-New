@@ -76,13 +76,12 @@ export default function LandingPage() {
       <section className="relative bg-gradient-to-br from-primary-900 to-primary-800 text-white overflow-hidden">
         <div className="absolute inset-0 bg-grid-white/[0.2] bg-[size:20px_20px]" />
         <div className="container mx-auto px-6 py-24 relative">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-xl"
-            >
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-3xl"
+          >
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
               Transform Your Trading with AI-Powered Intelligence
             </h1>
@@ -110,7 +109,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative md:block"
+            className="relative hidden md:block"
           >
             <div className="relative w-full aspect-square max-w-lg mx-auto">
               <div className="absolute inset-0 bg-gradient-to-tr from-primary-600/30 to-primary-600/10 rounded-3xl backdrop-blur-3xl" />
