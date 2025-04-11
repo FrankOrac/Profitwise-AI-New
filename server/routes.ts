@@ -322,6 +322,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(subscription);
   });
   
+  // Admin routes for analytics and metrics
+  app.get("/api/admin/analytics/overview", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const users = await storage.getAllUsers();
+      const subscriptions = await storage.getAllSubscriptions();
+      const insights = await storage.getAllAiInsights();
+      const portfolios = await storage.getAllPortfolios();
+
+      const metrics = {
+        totalUsers: users.length,
+        activeUsers: users.filter(u => u.lastLoginAt > Date.now() - 7 * 24 * 60 * 60 * 1000).length,
+        premiumUsers: subscriptions.filter(s => s.status === 'active' && s.planType !== 'basic').length,
+        totalRevenue: subscriptions.reduce((acc, sub) => acc + parseFloat(sub.amount || '0'), 0),
+        averagePortfolioSize: portfolios.reduce((acc, p) => acc + p.assets.length, 0) / portfolios.length || 0,
+        insightsGenerated: insights.length,
+        userGrowth: {
+          weekly: users.filter(u => u.createdAt > Date.now() - 7 * 24 * 60 * 60 * 1000).length,
+          monthly: users.filter(u => u.createdAt > Date.now() - 30 * 24 * 60 * 60 * 1000).length
+        }
+      };
+
+      res.json(metrics);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch analytics overview" });
+    }
+  });
+
+  app.get("/api/admin/analytics/revenue", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const subscriptions = await storage.getAllSubscriptions();
+      const last6Months = Array.from({length: 6}, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        return date.toISOString().slice(0, 7); // YYYY-MM format
+      }).reverse();
+
+      const revenueData = last6Months.map(month => ({
+        month,
+        revenue: subscriptions
+          .filter(s => s.createdAt.startsWith(month))
+          .reduce((acc, sub) => acc + parseFloat(sub.amount || '0'), 0)
+      }));
+
+      res.json(revenueData);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch revenue analytics" });
+    }
+  });
+
   // Admin routes for user management
   app.get("/api/admin/users", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {

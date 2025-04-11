@@ -56,10 +56,69 @@ export default function AdminDashboard() {
   });
 
   // Fetch revenue metrics
-  const { data: revenueMetrics } = useQuery({
-    queryKey: ["/api/admin/metrics/revenue"],
-    refetchInterval: 60000, // Refresh every minute
+  const { data: analytics } = useQuery({
+    queryKey: ["/api/admin/analytics/overview"],
+    refetchInterval: 30000,
   });
+
+  const { data: revenueData } = useQuery({
+    queryKey: ["/api/admin/analytics/revenue"],
+    refetchInterval: 60000,
+  });
+  
+  useEffect(() => {
+    if (!revenueChartRef.current || !revenueData) return;
+    
+    if (revenueChartInstance) {
+      revenueChartInstance.destroy();
+    }
+    
+    const ctx = revenueChartRef.current.getContext('2d');
+    if (!ctx) return;
+    
+    import('chart.js').then(({ Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip }) => {
+      Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip);
+      
+      const newChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: revenueData.map(d => d.month),
+          datasets: [{
+            label: 'Monthly Revenue',
+            data: revenueData.map(d => d.revenue),
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => `$${context.parsed.y.toFixed(2)}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => `$${value}`
+              }
+            }
+          }
+        }
+      });
+      
+      setRevenueChartInstance(newChartInstance);
+    });
+  }, [revenueData]);
 
   // Fetch real-time activity logs
   const { data: activityLogs } = useQuery({
