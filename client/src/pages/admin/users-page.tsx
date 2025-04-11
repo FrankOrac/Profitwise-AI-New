@@ -170,7 +170,7 @@ export default function AdminUsersPage() {
         <div className="flex flex-col">
           <Header />
           
-          <main className="bg-slate-50 p-6 flex-1 overflow-y-auto">
+          <main className="bg-background p-6 flex-1 overflow-y-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div>
                 <h1 className="text-2xl font-bold mb-2">User Management</h1>

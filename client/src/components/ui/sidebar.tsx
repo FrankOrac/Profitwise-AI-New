@@ -117,7 +117,7 @@ export function Sidebar({ closeMobileSidebar }: SidebarProps) {
         </div>
         
         <div className="px-3 mb-6">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
             Learn
           </div>
           <ul className="space-y-1">
@@ -134,7 +134,7 @@ export function Sidebar({ closeMobileSidebar }: SidebarProps) {
         </div>
         
         <div className="px-3 mb-6">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
             Settings
           </div>
           <ul className="space-y-1">
@@ -152,7 +152,7 @@ export function Sidebar({ closeMobileSidebar }: SidebarProps) {
         
         {adminItems.length > 0 && (
           <div className="px-3 mb-6">
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
               Admin
             </div>
             <ul className="space-y-1">
@@ -172,7 +172,7 @@ export function Sidebar({ closeMobileSidebar }: SidebarProps) {
         <div className="px-3 mt-auto">
           <Button 
             variant="ghost" 
-            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 dark:hover:text-red-400"
             onClick={handleLogout}
             disabled={logoutMutation.isPending}
           >
@@ -182,28 +182,24 @@ export function Sidebar({ closeMobileSidebar }: SidebarProps) {
         </div>
       </nav>
       
-      <div className="p-4 border-t border-slate-200">
-        <div 
-          className="flex items-center text-sm font-medium text-slate-700 cursor-pointer"
-          onClick={() => {
-            window.location.href = "/profile";
-            if (handleLinkClick) handleLinkClick();
-          }}
-        >
-          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center mr-2">
-            <span className="text-primary-700">
-              {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U'}
-            </span>
-          </div>
-          <div>
-            <div className="font-medium">
-              {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.username}
+      <div className="p-4 border-t border-border">
+        <Link href="/profile">
+          <div className="flex items-center text-sm font-medium text-foreground cursor-pointer">
+            <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mr-2">
+              <span className="text-primary-700 dark:text-primary-300">
+                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+              </span>
             </div>
-            <div className="text-xs text-slate-500">
-              {user?.subscriptionTier === 'basic' ? 'Basic Plan' : user?.subscriptionTier === 'pro' ? 'Pro Plan' : 'Enterprise Plan'}
+            <div>
+              <div className="font-medium">
+                {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.username}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {user?.subscriptionTier === 'basic' ? 'Basic Plan' : user?.subscriptionTier === 'pro' ? 'Pro Plan' : 'Enterprise Plan'}
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
     </aside>
   );
