@@ -168,7 +168,7 @@ export default function EducationPage() {
                     </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Durations</SelectItem>
+                    <SelectItem value="all">All Durations</SelectItem>
                     <SelectItem value="short">Short (&lt; 15 min)</SelectItem>
                     <SelectItem value="medium">Medium (15-30 min)</SelectItem>
                     <SelectItem value="long">Long (&gt; 30 min)</SelectItem>
