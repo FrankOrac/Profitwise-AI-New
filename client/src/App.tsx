@@ -12,6 +12,7 @@ import { AuthProvider } from "./hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./hooks/use-auth";
 import { useEffect, useState } from "react";
+import LandingPage from "@/pages/landing-page"; // Added import for LandingPage
 
 // Import placeholder pages
 import ProfilePage from "@/pages/profile-page";
@@ -98,10 +99,13 @@ function AppWithAuth() {
 
   return (
     <Switch>
+      <Route path="/"> {/* Added route for LandingPage */}
+        <LandingPage />
+      </Route>
       <Route path="/auth">
         <LoginGate />
       </Route>
-      <Route path="/">
+      <Route path="/home"> {/*Changed path from / to /home */}
         <ProtectedRoute component={HomePage} />
       </Route>
       <Route path="/portfolio">
