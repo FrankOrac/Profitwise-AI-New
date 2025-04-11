@@ -293,7 +293,7 @@ export default function SocialTradingPage() {
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-3">
                                     <Avatar>
-                                      <AvatarFallback>{trader.name.charAt(0)}</AvatarFallback>
+                                      <AvatarFallback>{trader.username.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div>
                                       <div className="flex items-center gap-1">
