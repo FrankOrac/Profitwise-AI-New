@@ -5,6 +5,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   ArrowUpRight, 
   Copy, 
@@ -14,143 +17,81 @@ import {
   TrendingUp, 
   Users,
   UserPlus,
-  Filter
+  Filter,
+  AlertTriangle,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useToast } from "@/hooks/use-toast";
-
-type Trader = {
-  id: string;
-  name: string;
-  username: string;
-  avatar: string;
-  followers: number;
-  performance: string;
-  winRate: string;
-  verified: boolean;
-  biography: string;
-};
-
-type TradePost = {
-  id: string;
-  user: {
-    name: string;
-    username: string;
-    avatar: string;
-    verified: boolean;
-  };
-  content: string;
-  timestamp: string;
-  likes: number;
-  comments: number;
-  action: "buy" | "sell" | "hold";
-  asset: {
-    name: string;
-    symbol: string;
-    price: string;
-  };
-};
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo } from 'react';
 
 export default function SocialTradingPage() {
-  const toast = useToast(); // Access the toast function from the hook
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAction, setSelectedAction] = useState("all");
 
-  // Mock data for top traders
-  const topTraders: Trader[] = [
-    {
-      id: "1",
-      name: "Alex Morgan",
-      username: "alexm_trader",
-      avatar: "",
-      followers: 12453,
-      performance: "+32.4%",
-      winRate: "76%",
-      verified: true,
-      biography: "Full-time crypto trader with 5 years of experience. Specialized in momentum trading and technical analysis."
-    },
-    {
-      id: "2",
-      name: "Sarah Chen",
-      username: "cryptosarah",
-      avatar: "",
-      followers: 8761,
-      performance: "+28.7%",
-      winRate: "72%",
-      verified: true,
-      biography: "Professional stock trader and portfolio manager. Focused on long-term growth and value investing strategies."
-    },
-    {
-      id: "3",
-      name: "David Johnson",
-      username: "dave_trades",
-      avatar: "",
-      followers: 6542,
-      performance: "+21.5%",
-      winRate: "68%",
-      verified: true,
-      biography: "Day trader and market analyst. I share daily insights on market trends and trading opportunities."
-    }
-  ];
+  const { data: tradePosts, isLoading: isLoadingPosts } = useQuery({
+    queryKey: ["/api/social/feed"],
+    refetchInterval: 30000
+  });
 
-  // Mock data for trade posts
-  const tradePosts: TradePost[] = [
-    {
-      id: "1",
-      user: {
-        name: "Alex Morgan",
-        username: "alexm_trader",
-        avatar: "",
-        verified: true
-      },
-      content: "Just added more BTC to my portfolio. I believe we're going to see a major breakout above $70k within the next few weeks. The technical indicators are aligning nicely.",
-      timestamp: "2 hours ago",
-      likes: 245,
-      comments: 32,
-      action: "buy",
-      asset: {
-        name: "Bitcoin",
-        symbol: "BTC",
-        price: "$68,245.18"
-      }
+  const { data: traders } = useQuery({
+    queryKey: ["/api/social/traders/performance"],
+    refetchInterval: 60000
+  });
+
+  const createPostMutation = useMutation({
+    mutationFn: async (postData) => {
+      const response = await fetch("/api/social/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(postData)
+      });
+      if (!response.ok) throw new Error("Failed to create post");
+      return response.json();
     },
-    {
-      id: "2",
-      user: {
-        name: "Sarah Chen",
-        username: "cryptosarah",
-        avatar: "",
-        verified: true
-      },
-      content: "Taking profits on some of my ETH position. The resistance at $3,800 is strong, and I expect a short-term pullback before the next leg up. Will rebuy lower.",
-      timestamp: "5 hours ago",
-      likes: 187,
-      comments: 24,
-      action: "sell",
-      asset: {
-        name: "Ethereum",
-        symbol: "ETH",
-        price: "$3,782.45"
-      }
-    },
-    {
-      id: "3",
-      user: {
-        name: "David Johnson",
-        username: "dave_trades",
-        avatar: "",
-        verified: true
-      },
-      content: "I'm holding my SOL position through this volatility. The fundamentals remain strong, and ecosystem growth continues to impress. This is a long-term play.",
-      timestamp: "Yesterday",
-      likes: 132,
-      comments: 18,
-      action: "hold",
-      asset: {
-        name: "Solana",
-        symbol: "SOL",
-        price: "$142.35"
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries(["/api/social/feed"]);
+      toast({
+        title: "Success",
+        description: "Your trade has been posted",
+      });
     }
-  ];
+  });
+
+  const copyTradeMutation = useMutation({
+    mutationFn: async ({ traderId, postId }) => {
+      const response = await fetch("/api/social/copy-trade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ traderId, postId })
+      });
+      if (!response.ok) throw new Error("Failed to copy trade");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Trade copied successfully",
+      });
+    }
+  });
+
+  const filteredPosts = useMemo(() => {
+    if (!tradePosts) return [];
+    return tradePosts.filter(post => {
+      const matchesSearch = 
+        post.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesAction = selectedAction === "all" || post.action === selectedAction;
+      return matchesSearch && matchesAction;
+    });
+  }, [tradePosts, searchQuery, selectedAction]);
 
   return (
     <>
@@ -170,13 +111,83 @@ export default function SocialTradingPage() {
                     <Input 
                       placeholder="Search traders or assets..." 
                       className="pl-10 w-64"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Button variant="outline" size="icon">
-                    <Filter className="h-4 w-4" />
-                  </Button>
+                  <Select value={selectedAction} onValueChange={setSelectedAction}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Filter by action" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Actions</SelectItem>
+                      <SelectItem value="buy">Buy</SelectItem>
+                      <SelectItem value="sell">Sell</SelectItem>
+                      <SelectItem value="hold">Hold</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="mb-6">
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    Share Trade
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Share Your Trade</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target as HTMLFormElement);
+                    createPostMutation.mutate({
+                      content: formData.get("content"),
+                      symbol: formData.get("symbol"),
+                      action: formData.get("action"),
+                      position: formData.get("position")
+                    });
+                  }}>
+                    <div className="space-y-4">
+                      <div>
+                        <Input name="symbol" placeholder="Asset Symbol (e.g., BTC)" required />
+                      </div>
+                      <div>
+                        <Select name="action" required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Action" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="buy">Buy</SelectItem>
+                            <SelectItem value="sell">Sell</SelectItem>
+                            <SelectItem value="hold">Hold</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Input 
+                          name="position" 
+                          type="number" 
+                          placeholder="Position Size" 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <Textarea 
+                          name="content" 
+                          placeholder="Share your analysis..." 
+                          required 
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">
+                        Post Trade
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
 
               <Tabs defaultValue="feed">
                 <TabsList className="mb-6">
@@ -188,64 +199,85 @@ export default function SocialTradingPage() {
                 <TabsContent value="feed">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
-                      {tradePosts.map((post) => (
-                        <Card key={post.id}>
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <Avatar className="h-10 w-10">
-                                <AvatarFallback className="bg-primary-100 text-primary-700">
-                                  {post.user.name.charAt(0)}
-                                </AvatarFallback>
-                                {post.user.avatar && <AvatarImage src={post.user.avatar} />}
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">{post.user.name}</span>
-                                  {post.user.verified && (
-                                    <svg className="h-4 w-4 text-blue-500 fill-current" viewBox="0 0 24 24">
-                                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.5 14.5l-4-4 1.5-1.5 2.5 2.5 6-6 1.5 1.5-7.5 7.5z" />
-                                    </svg>
-                                  )}
-                                  <span className="text-slate-500 text-sm">@{post.user.username}</span>
-                                  <span className="text-slate-400 text-xs">• {post.timestamp}</span>
-                                </div>
-                                <p className="mt-2">{post.content}</p>
-                                <div className="mt-3 p-3 bg-slate-50 rounded-md flex items-center justify-between">
-                                  <div>
-                                    <div className="text-sm font-medium">{post.asset.name} ({post.asset.symbol})</div>
-                                    <div className="text-lg font-bold">{post.asset.price}</div>
+                      {isLoadingPosts ? (
+                        <div className="text-center py-10">Loading posts...</div>
+                      ) : (
+                        filteredPosts.map((post) => (
+                          <Card key={post.id}>
+                            <CardContent className="p-6">
+                              <div className="flex items-start gap-4">
+                                <Avatar>
+                                  <AvatarFallback>
+                                    {post.user.name.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold">{post.user.name}</span>
+                                    {post.user.verified && (
+                                      <svg className="h-4 w-4 text-blue-500 fill-current" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.5 14.5l-4-4 1.5-1.5 2.5 2.5 6-6 1.5 1.5-7.5 7.5z" />
+                                      </svg>
+                                    )}
+                                    <span className="text-slate-500 text-sm">@{post.user.username}</span>
+                                    <span className="text-slate-400 text-xs">• {post.timestamp}</span>
                                   </div>
-                                  <Badge
-                                    className={
-                                      post.action === "buy" 
-                                        ? "bg-green-100 text-green-700 hover:bg-green-100" 
-                                        : post.action === "sell" 
-                                          ? "bg-red-100 text-red-700 hover:bg-red-100" 
-                                          : "bg-blue-100 text-blue-700 hover:bg-blue-100"
-                                    }
-                                  >
-                                    {post.action.toUpperCase()}
-                                  </Badge>
-                                </div>
-                                <div className="mt-4 flex items-center gap-4">
-                                  <button className="flex items-center gap-1 text-slate-500 hover:text-primary-600">
-                                    <ThumbsUp className="h-4 w-4" />
-                                    <span>{post.likes}</span>
-                                  </button>
-                                  <button className="flex items-center gap-1 text-slate-500 hover:text-primary-600">
-                                    <MessageSquare className="h-4 w-4" />
-                                    <span>{post.comments}</span>
-                                  </button>
-                                  <button className="flex items-center gap-1 text-slate-500 hover:text-primary-600">
-                                    <Copy className="h-4 w-4" />
-                                    <span>Copy Trade</span>
-                                  </button>
+                                  <p className="mt-2">{post.content}</p>
+                                  <div className="mt-3 p-3 bg-slate-50 rounded-md flex items-center justify-between">
+                                    <div>
+                                      <div className="text-sm font-medium">
+                                        {post.asset.name} ({post.asset.symbol})
+                                      </div>
+                                      <div className="text-lg font-bold">
+                                        {post.asset.price}
+                                        <span className={`ml-2 text-sm ${
+                                          post.asset.change > 0 ? "text-green-600" : "text-red-600"
+                                        }`}>
+                                          {post.asset.change > 0 ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />}
+                                          {Math.abs(post.asset.change)}%
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Badge
+                                      className={
+                                        post.action === "buy" 
+                                          ? "bg-green-100 text-green-700 hover:bg-green-100" 
+                                          : post.action === "sell" 
+                                            ? "bg-red-100 text-red-700 hover:bg-red-100" 
+                                            : "bg-blue-100 text-blue-700 hover:bg-blue-100"
+                                      }
+                                    >
+                                      {post.action.toUpperCase()}
+                                    </Badge>
+                                  </div>
+                                  <div className="mt-4 flex items-center gap-4">
+                                    <Button variant="ghost" size="sm" className="text-slate-500 hover:text-primary-600">
+                                      <ThumbsUp className="h-4 w-4 mr-1" />
+                                      <span>{post.likes}</span>
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="text-slate-500 hover:text-primary-600">
+                                      <MessageSquare className="h-4 w-4 mr-1" />
+                                      <span>{post.comments}</span>
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      className="text-slate-500 hover:text-primary-600"
+                                      onClick={() => copyTradeMutation.mutate({
+                                        traderId: post.userId,
+                                        postId: post.id
+                                      })}
+                                    >
+                                      <Copy className="h-4 w-4 mr-1" />
+                                      Copy Trade
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
                     </div>
 
                     <div className="space-y-6">
@@ -256,105 +288,73 @@ export default function SocialTradingPage() {
                         </CardHeader>
                         <CardContent className="p-0">
                           <div className="divide-y">
-                            {topTraders.slice(0, 3).map((trader) => (
-                              <div key={trader.id} className="p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <Avatar>
-                                    <AvatarFallback className="bg-primary-100 text-primary-700">
-                                      {trader.name.charAt(0)}
-                                    </AvatarFallback>
-                                    {trader.avatar && <AvatarImage src={trader.avatar} />}
-                                  </Avatar>
-                                  <div>
-                                    <div className="flex items-center gap-1">
-                                      <span className="font-medium">{trader.name}</span>
-                                      {trader.verified && (
-                                        <svg className="h-3 w-3 text-blue-500 fill-current" viewBox="0 0 24 24">
-                                          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.5 14.5l-4-4 1.5-1.5 2.5 2.5 6-6 1.5 1.5-7.5 7.5z" />
-                                        </svg>
-                                      )}
+                            {traders?.map((trader) => (
+                              <div key={trader.id} className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-3">
+                                    <Avatar>
+                                      <AvatarFallback>{trader.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <div className="flex items-center gap-1">
+                                        <span className="font-medium">{trader.name}</span>
+                                        {trader.verified && (
+                                          <svg className="h-4 w-4 text-blue-500 fill-current" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.5 14.5l-4-4 1.5-1.5 2.5 2.5 6-6 1.5 1.5-7.5 7.5z" />
+                                          </svg>
+                                        )}
+                                      </div>
+                                      <div className="text-sm text-slate-500">
+                                        Win Rate: {trader.winRate}%
+                                      </div>
                                     </div>
-                                    <div className="text-xs text-slate-500">{trader.performance} • {trader.followers.toLocaleString()} followers</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium text-green-600">
+                                      +{trader.performance}%
+                                    </div>
+                                    <div className="text-xs text-slate-500">
+                                      {trader.totalTrades} trades
+                                    </div>
                                   </div>
                                 </div>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    // Update follow status
-                                    trader.followers += 1;
-                                    // Show success message
-                                    toast({
-                                      title: "Success",
-                                      description: `You are now following ${trader.name}`,
-                                    });
-                                  }}
-                                >
-                                  <UserPlus className="h-3 w-3 mr-1" />
-                                  Follow
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button variant="outline" size="sm" className="flex-1">
+                                    <UserPlus className="h-4 w-4 mr-1" />
+                                    Follow
+                                  </Button>
+                                  <Button variant="outline" size="sm" className="flex-1">
+                                    <TrendingUp className="h-4 w-4 mr-1" />
+                                    Copy Trades
+                                  </Button>
+                                </div>
                               </div>
                             ))}
-                          </div>
-                          <div className="p-4">
-                            <Button variant="ghost" className="w-full text-primary-600">
-                              View All Traders
-                            </Button>
                           </div>
                         </CardContent>
                       </Card>
 
                       <Card>
                         <CardHeader>
-                          <CardTitle>Top Performing Assets</CardTitle>
-                          <CardDescription>Assets with highest gains today</CardDescription>
+                          <CardTitle>Trading Statistics</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0">
-                          <div className="divide-y">
-                            <div className="p-4 flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
-                                  <span className="font-bold text-amber-600">B</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium">Bitcoin</div>
-                                  <div className="text-xs text-slate-500">BTC</div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-medium">$68,245.18</div>
-                                <div className="text-xs text-green-600">+5.2%</div>
-                              </div>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm">Success Rate</span>
+                              <span className="font-medium text-green-600">72%</span>
                             </div>
-                            <div className="p-4 flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                  <span className="font-bold text-blue-600">E</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium">Ethereum</div>
-                                  <div className="text-xs text-slate-500">ETH</div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-medium">$3,782.45</div>
-                                <div className="text-xs text-green-600">+3.8%</div>
-                              </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm">Avg. Return</span>
+                              <span className="font-medium text-green-600">+18.5%</span>
                             </div>
-                            <div className="p-4 flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                                  <span className="font-bold text-purple-600">S</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium">Solana</div>
-                                  <div className="text-xs text-slate-500">SOL</div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-medium">$142.35</div>
-                                <div className="text-xs text-green-600">+7.2%</div>
-                              </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm">Total Trades</span>
+                              <span className="font-medium">142</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm">Following</span>
+                              <span className="font-medium">23</span>
                             </div>
                           </div>
                         </CardContent>
@@ -363,9 +363,10 @@ export default function SocialTradingPage() {
                   </div>
                 </TabsContent>
 
+                {/* Rest of TabsContent remains largely the same, but might need adjustments for data fetching */}
                 <TabsContent value="traders">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {topTraders.map((trader) => (
+                    {traders?.map((trader) => (
                       <Card key={trader.id}>
                         <CardContent className="p-6">
                           <div className="flex flex-col items-center">
@@ -403,14 +404,14 @@ export default function SocialTradingPage() {
                             </div>
                             <div className="flex gap-2 w-full">
                               <Button className="flex-1" onClick={() => {
-                                    // Update follow status
-                                    trader.followers += 1;
-                                    // Show success message
-                                    toast({
-                                      title: "Success",
-                                      description: `You are now following ${trader.name}`,
-                                    });
-                                  }}>
+                                // Update follow status -  This needs a proper implementation with API call.
+                                // trader.followers += 1; 
+                                // Show success message -  This should also be handled via react-query.
+                                // toast({
+                                //   title: "Success",
+                                //   description: `You are now following ${trader.name}`,
+                                // });
+                              }}>
                                 <UserPlus className="h-4 w-4 mr-2" />
                                 Follow
                               </Button>

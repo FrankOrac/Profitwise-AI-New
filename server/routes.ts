@@ -542,6 +542,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Social Trading Routes
+  app.post("/api/social/post", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { content, symbol, action, position } = req.body;
+      const userId = req.user!.id;
+      
+      const post = await storage.createTradePost({
+        userId,
+        content,
+        symbol,
+        action,
+        position,
+        timestamp: new Date()
+      });
+      
+      res.status(201).json(post);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  app.post("/api/social/copy-trade", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { traderId, postId } = req.body;
+      const followerId = req.user!.id;
+      
+      const tradePost = await storage.getTradePostById(postId);
+      if (!tradePost) {
+        return res.status(404).json({ message: "Trade not found" });
+      }
+
+      // Execute copy trade
+      const copyTrade = await storage.executeCopyTrade({
+        followerId,
+        traderId,
+        postId,
+        symbol: tradePost.symbol,
+        action: tradePost.action,
+        position: tradePost.position,
+        timestamp: new Date()
+      });
+
+      res.status(201).json(copyTrade);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to copy trade" });
+    }
+  });
+
+  app.get("/api/social/feed", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const posts = await storage.getTradePosts();
+      const postsWithUserData = await Promise.all(posts.map(async (post) => {
+        const user = await storage.getUser(post.userId);
+        const marketData = await storage.getMarketData(post.symbol);
+        return {
+          ...post,
+          user: {
+            name: `${user.firstName} ${user.lastName}`,
+            username: user.username,
+            verified: user.role === 'verified_trader'
+          },
+          asset: {
+            name: marketData.name,
+            symbol: post.symbol,
+            price: marketData.price,
+            change: marketData.changePercent
+          }
+        };
+      }));
+      
+      res.json(postsWithUserData);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch posts" });
+    }
+  });
+
+  app.get("/api/social/traders/performance", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const traders = await storage.getTopTraders();
+      const tradersWithStats = await Promise.all(traders.map(async (trader) => {
+        const stats = await storage.getTraderStats(trader.id);
+        return {
+          ...trader,
+          performance: stats.performance,
+          winRate: stats.winRate,
+          totalTrades: stats.totalTrades,
+          followers: stats.followers
+        };
+      }));
+      
+      res.json(tradersWithStats);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch traders" });
+    }
+  });
+
   app.get("/api/admin/users", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
