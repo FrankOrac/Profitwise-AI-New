@@ -156,7 +156,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
     </div>
-  });
+  );
 
   const { data: revenueData } = useQuery({
     queryKey: ["/api/admin/analytics/revenue"],
