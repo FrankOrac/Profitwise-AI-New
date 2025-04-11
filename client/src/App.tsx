@@ -152,9 +152,6 @@ function AppWithAuth() {
       <Route path="/education">
         <ProtectedRoute component={EducationPage} />
       </Route>
-      <Route path="/users">
-        <ProtectedRoute component={UsersPage} adminOnly={true} />
-      </Route>
       <Route>
         <NotFound />
       </Route>
