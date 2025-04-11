@@ -4,10 +4,141 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertPortfolioAssetSchema, insertAiInsightSchema } from "@shared/schema";
+import { ethers } from "ethers";
+
+const web3WalletSchema = z.object({
+  address: z.string(),
+  chainId: z.number(),
+  name: z.string().optional(),
+  type: z.enum(["ethereum", "bitcoin", "solana"]),
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication routes
   setupAuth(app);
+
+  // Web3 Wallet Routes
+  app.post("/api/web3/connect-wallet", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const userId = req.user!.id;
+      const walletData = web3WalletSchema.parse(req.body);
+
+      const wallet = await storage.connectWallet({
+        userId,
+        ...walletData,
+        connected: true,
+        lastSync: new Date()
+      });
+
+      res.status(201).json(wallet);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ errors: err.errors });
+      }
+      res.status(500).json({ message: "Failed to connect wallet" });
+    }
+  });
+
+  app.get("/api/web3/wallets", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const userId = req.user!.id;
+      const wallets = await storage.getWallets(userId);
+
+      // Fetch real-time balances
+      const walletsWithBalances = await Promise.all(wallets.map(async (wallet) => {
+        try {
+          if (wallet.type === "ethereum") {
+            const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL);
+            const balance = await provider.getBalance(wallet.address);
+            return {
+              ...wallet,
+              balance: ethers.formatEther(balance),
+              lastUpdated: new Date()
+            };
+          }
+          return wallet;
+        } catch (err) {
+          console.error(`Failed to fetch balance for ${wallet.address}:`, err);
+          return wallet;
+        }
+      }));
+
+      res.json(walletsWithBalances);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch wallets" });
+    }
+  });
+
+  app.post("/api/web3/transactions/send", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { to, value, walletId } = req.body;
+      const userId = req.user!.id;
+
+      const wallet = await storage.getWalletById(walletId);
+      if (!wallet || wallet.userId !== userId) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      // Create and sign transaction
+      const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL);
+      const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+
+      const tx = await wallet.sendTransaction({
+        to,
+        value: ethers.parseEther(value)
+      });
+
+      await storage.saveTransaction({
+        userId,
+        walletId,
+        hash: tx.hash,
+        to,
+        value,
+        status: 'pending'
+      });
+
+      res.json({ hash: tx.hash });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to send transaction" });
+    }
+  });
+
+  app.get("/api/web3/transactions", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const userId = req.user!.id;
+      const transactions = await storage.getTransactions(userId);
+
+      // Update pending transaction statuses
+      const updatedTransactions = await Promise.all(transactions.map(async (tx) => {
+        if (tx.status === 'pending') {
+          try {
+            const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL);
+            const receipt = await provider.getTransactionReceipt(tx.hash);
+
+            if (receipt) {
+              const status = receipt.status === 1 ? 'completed' : 'failed';
+              await storage.updateTransactionStatus(tx.id, status);
+              return { ...tx, status };
+            }
+          } catch (err) {
+            console.error(`Failed to update transaction ${tx.hash}:`, err);
+          }
+        }
+        return tx;
+      }));
+
+      res.json(updatedTransactions);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
 
   // API routes for portfolio assets
   app.get("/api/portfolio", async (req, res) => {
@@ -210,13 +341,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch content" });
     }
   });
-
+  
   // Admin routes for educational content management
   app.post("/api/admin/education", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-
+    
     try {
       const newContent = await storage.addEducationalContent(req.body);
       res.status(201).json(newContent);
@@ -224,17 +355,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create content" });
     }
   });
-
+  
   app.put("/api/admin/education/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-
+    
     const contentId = parseInt(req.params.id);
     if (isNaN(contentId)) {
       return res.status(400).json({ message: "Invalid content ID" });
     }
-
+    
     try {
       const updatedContent = await storage.updateEducationalContent(contentId, req.body);
       if (!updatedContent) {
@@ -245,17 +376,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update content" });
     }
   });
-
+  
   app.delete("/api/admin/education/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-
+    
     const contentId = parseInt(req.params.id);
     if (isNaN(contentId)) {
       return res.status(400).json({ message: "Invalid content ID" });
     }
-
+    
     try {
       const deleted = await storage.deleteEducationalContent(contentId);
       if (!deleted) {
@@ -272,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const plans = await storage.getAllSubscriptionPlans();
     res.json(plans);
   });
-
+  
   app.post("/api/subscriptions/subscribe", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
@@ -284,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!plan) {
         return res.status(404).json({ message: "Subscription plan not found" });
       }
-
+      
       const stripe = await storage.getPaymentProcessor();
       
       // Create payment intent
@@ -295,7 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         confirm: true,
         customer: req.user!.stripeCustomerId
       });
-
+      
       if (paymentIntent.status === 'succeeded') {
         const subscription = await storage.createSubscription({
           userId,
@@ -313,7 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create subscription" });
     }
   });
-
+  
   app.get("/api/subscriptions/current", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
@@ -327,13 +458,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-
+    
     try {
       const users = await storage.getAllUsers();
       const subscriptions = await storage.getAllSubscriptions();
       const insights = await storage.getAllAiInsights();
       const portfolios = await storage.getAllPortfolios();
-
+      
       const metrics = {
         totalUsers: users.length,
         activeUsers: users.filter(u => u.lastLoginAt > Date.now() - 7 * 24 * 60 * 60 * 1000).length,
@@ -346,18 +477,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           monthly: users.filter(u => u.createdAt > Date.now() - 30 * 24 * 60 * 60 * 1000).length
         }
       };
-
+      
       res.json(metrics);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch analytics overview" });
     }
   });
-
+  
   app.get("/api/admin/analytics/revenue", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-
+    
     try {
       const subscriptions = await storage.getAllSubscriptions();
       const last6Months = Array.from({length: 6}, (_, i) => {
@@ -365,26 +496,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         date.setMonth(date.getMonth() - i);
         return date.toISOString().slice(0, 7); // YYYY-MM format
       }).reverse();
-
+      
       const revenueData = last6Months.map(month => ({
         month,
         revenue: subscriptions
           .filter(s => s.createdAt.startsWith(month))
           .reduce((acc, sub) => acc + parseFloat(sub.amount || '0'), 0)
       }));
-
+      
       res.json(revenueData);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch revenue analytics" });
     }
   });
-
+  
   // Admin routes for user management
   app.get("/api/admin/tasks", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-
+    
     try {
       const tasks = await storage.getAdminTasks();
       res.json(tasks);
@@ -392,12 +523,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch tasks" });
     }
   });
-
+  
   app.get("/api/admin/activity-logs", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-
+    
     try {
       const logs = await storage.getActivityLogs();
       res.json(logs);
@@ -405,7 +536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch activity logs" });
     }
   });
-
+  
   app.get("/api/admin/users", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
@@ -436,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update user" });
     }
   });
-
+  
   const httpServer = createServer(app);
   return httpServer;
 }
