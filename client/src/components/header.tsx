@@ -3,6 +3,7 @@ import { Search, Bell, HelpCircle, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MobileSidebar from "@/components/ui/mobile-sidebar";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Header() {
   const [walletConnected, setWalletConnected] = useState(false);
@@ -12,7 +13,7 @@ export function Header() {
   };
   
   return (
-    <header className="bg-white border-b border-slate-200 h-16 px-6 flex items-center justify-between sticky top-0 z-30">
+    <header className="bg-background border-b border-border h-16 px-6 flex items-center justify-between sticky top-0 z-30">
       <div className="flex md:hidden">
         <MobileSidebar />
       </div>
@@ -24,15 +25,16 @@ export function Header() {
             placeholder="Search markets, assets..." 
             className="w-64 pl-3 pr-9" 
           />
-          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         </div>
       </div>
       
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" className="text-slate-500">
+        <ThemeToggle />
+        <Button variant="ghost" size="icon">
           <Bell className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-slate-500">
+        <Button variant="ghost" size="icon">
           <HelpCircle className="h-5 w-5" />
         </Button>
         

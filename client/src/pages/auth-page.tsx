@@ -137,7 +137,7 @@ export default function AuthPage() {
       
       <div className="min-h-screen grid md:grid-cols-2">
         {/* Form Section */}
-        <div className="flex flex-col justify-center items-center p-6 md:p-10 bg-white">
+        <div className="flex flex-col justify-center items-center p-6 md:p-10 bg-background">
           <div className="w-full max-w-md">
             <div className="flex items-center gap-2 mb-8">
               <div className="bg-primary-600 text-white w-8 h-8 rounded-md flex items-center justify-center">
@@ -215,10 +215,10 @@ export default function AuthPage() {
                         
                         <div className="relative my-4">
                           <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-slate-200"></span>
+                            <span className="w-full border-t border-border"></span>
                           </div>
                           <div className="relative flex justify-center text-xs">
-                            <span className="bg-white px-2 text-slate-500">or continue with</span>
+                            <span className="bg-card px-2 text-muted-foreground">or continue with</span>
                           </div>
                         </div>
                         
