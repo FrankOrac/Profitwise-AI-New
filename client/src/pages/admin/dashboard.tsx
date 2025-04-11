@@ -61,11 +61,6 @@ export default function AdminDashboard() {
     refetchInterval: 30000,
   });
 
-  const { data: tasks } = useQuery({
-    queryKey: ["/api/admin/tasks"],
-    refetchInterval: 60000,
-  });
-
   const statusColors = {
     pending: "bg-yellow-100 text-yellow-800",
     inProgress: "bg-blue-100 text-blue-800",
@@ -155,17 +150,17 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!revenueChartRef.current) return;
-    
+
     if (revenueChartInstance) {
       revenueChartInstance.destroy();
     }
-    
+
     const ctx = revenueChartRef.current.getContext('2d');
     if (!ctx) return;
-    
+
     import('chart.js').then(({ Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip }) => {
       Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip);
-      
+
       const newChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -202,7 +197,7 @@ export default function AdminDashboard() {
           }
         }
       });
-      
+
       setRevenueChartInstance(newChartInstance);
     });
   }, [revenueData]);
@@ -218,34 +213,34 @@ export default function AdminDashboard() {
     queryKey: ["/api/admin/tasks"],
     refetchInterval: 30000,
   });
-  
+
   const usersBySubscription = {
     basic: users.filter(user => user.subscriptionTier === "basic").length,
     pro: users.filter(user => user.subscriptionTier === "pro").length,
     enterprise: users.filter(user => user.subscriptionTier === "enterprise").length,
   };
-  
+
   const userChartRef = useRef<HTMLCanvasElement>(null);
   const revenueChartRef = useRef<HTMLCanvasElement>(null);
   const [userChartInstance, setUserChartInstance] = useState<any>(null);
   const [revenueChartInstance, setRevenueChartInstance] = useState<any>(null);
-  
+
   useEffect(() => {
     if (!userChartRef.current) return;
-    
+
     // Clean up previous chart instance
     if (userChartInstance) {
       userChartInstance.destroy();
     }
-    
+
     const ctx = userChartRef.current.getContext('2d');
     if (!ctx) return;
-    
+
     // Dynamically import Chart.js
     import('chart.js').then(({ Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip }) => {
       // Register required components
       Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
-      
+
       const newChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -280,35 +275,35 @@ export default function AdminDashboard() {
           }
         }
       });
-      
+
       setUserChartInstance(newChartInstance);
     }).catch(err => {
       console.error('Failed to load Chart.js', err);
     });
-    
+
     return () => {
       if (userChartInstance) {
         userChartInstance.destroy();
       }
     };
   }, []);
-  
+
   useEffect(() => {
     if (!revenueChartRef.current) return;
-    
+
     // Clean up previous chart instance
     if (revenueChartInstance) {
       revenueChartInstance.destroy();
     }
-    
+
     const ctx = revenueChartRef.current.getContext('2d');
     if (!ctx) return;
-    
+
     // Dynamically import Chart.js
     import('chart.js').then(({ Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip }) => {
       // Register required components
       Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip);
-      
+
       const newChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -350,19 +345,19 @@ export default function AdminDashboard() {
           }
         }
       });
-      
+
       setRevenueChartInstance(newChartInstance);
     }).catch(err => {
       console.error('Failed to load Chart.js', err);
     });
-    
+
     return () => {
       if (revenueChartInstance) {
         revenueChartInstance.destroy();
       }
     };
   }, []);
-  
+
   // Recent activities mock data
   const recentActivities = [
     { id: 1, user: "admin", action: "Added new educational content", time: "2 hours ago" },
@@ -371,27 +366,27 @@ export default function AdminDashboard() {
     { id: 4, user: "michael.brown", action: "Added 3 assets to portfolio", time: "yesterday" },
     { id: 5, user: "emma.wilson", action: "Registered new account", time: "2 days ago" },
   ];
-  
+
   return (
     <>
       <Helmet>
         <title>Admin Dashboard | ProfitWise AI</title>
       </Helmet>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] min-h-screen">
         <div className="hidden md:block">
           <Sidebar />
         </div>
-        
+
         <div className="flex flex-col">
           <Header />
-          
+
           <main className="bg-slate-50 p-6 flex-1 overflow-y-auto">
             <div className="mb-6">
               <h1 className="text-2xl font-bold mb-2">Admin Dashboard</h1>
               <p className="text-slate-500">Overview of platform metrics and user activity</p>
             </div>
-            
+
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <MetricCard 
@@ -423,7 +418,7 @@ export default function AdminDashboard() {
                 positive={true}
               />
             </div>
-            
+
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <Card>
@@ -439,7 +434,7 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-6">
@@ -454,7 +449,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
-            
+
             {/* Subscription Distribution */}
             <Card className="mb-8">
               <CardContent className="p-6">
@@ -467,7 +462,7 @@ export default function AdminDashboard() {
                     </Button>
                   </Link>
                 </div>
-                
+
                 {usersLoading ? (
                   <div className="flex justify-center py-10">
                     <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
@@ -485,7 +480,7 @@ export default function AdminDashboard() {
                           } as any}
                         ></div>
                       </div>
-                      
+
                       <div className="grid grid-cols-3 gap-4">
                         <div className="text-center">
                           <div className="flex items-center justify-center mb-2">
@@ -497,7 +492,7 @@ export default function AdminDashboard() {
                             {(usersBySubscription.basic / users.length * 100).toFixed(1)}%
                           </div>
                         </div>
-                        
+
                         <div className="text-center">
                           <div className="flex items-center justify-center mb-2">
                             <div className="w-3 h-3 rounded-full bg-primary-600 mr-2"></div>
@@ -508,7 +503,7 @@ export default function AdminDashboard() {
                             {(usersBySubscription.pro / users.length * 100).toFixed(1)}%
                           </div>
                         </div>
-                        
+
                         <div className="text-center">
                           <div className="flex items-center justify-center mb-2">
                             <div className="w-3 h-3 rounded-full bg-purple-600 mr-2"></div>
@@ -521,7 +516,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex-1">
                       <h3 className="text-sm font-medium mb-4">Insights</h3>
                       <ul className="space-y-2">
@@ -555,7 +550,7 @@ export default function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
-            
+
             {/* Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <Card>
@@ -567,7 +562,7 @@ export default function AdminDashboard() {
                       <ArrowRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   <ul className="divide-y divide-slate-100">
                     {recentActivities.map((activity) => (
                       <li key={activity.id} className="py-3 flex items-start">
@@ -587,7 +582,7 @@ export default function AdminDashboard() {
                   </ul>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-6">
@@ -597,7 +592,7 @@ export default function AdminDashboard() {
                       <ArrowRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   <ul className="divide-y divide-slate-100">
                     <li className="py-3 flex items-start">
                       <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center mr-3">
