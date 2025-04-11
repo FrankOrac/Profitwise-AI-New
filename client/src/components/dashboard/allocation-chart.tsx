@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import Chart from "@/lib/chart-setup";
 
 interface AssetAllocation {
   name: string;
@@ -33,11 +34,7 @@ export function AllocationChart({ className }: AllocationChartProps) {
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
     
-    // Dynamically import Chart.js
-    import('chart.js').then(({ Chart, ArcElement, Tooltip }) => {
-      // Register required components
-      Chart.register(ArcElement, Tooltip);
-      
+    try {
       const newChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -61,9 +58,9 @@ export function AllocationChart({ className }: AllocationChartProps) {
       });
       
       setChartInstance(newChartInstance);
-    }).catch(err => {
-      console.error('Failed to load Chart.js', err);
-    });
+    } catch (err) {
+      console.error('Failed to create doughnut chart', err);
+    }
     
     return () => {
       if (chartInstance) {

@@ -3,9 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// We're simulating a React component for a chart that would use a real charting library in production
-// For now using Chart.js would directly
+import Chart from "@/lib/chart-setup";
 
 type TimeRange = "1D" | "1W" | "1M" | "1Y" | "ALL";
 
@@ -64,11 +62,7 @@ export function PortfolioChart({ className }: PortfolioChartProps) {
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
     
-    // Dynamically import Chart.js
-    import('chart.js').then(({ Chart, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Filler }) => {
-      // Register required components
-      Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Filler);
-      
+    try {
       const data = chartData[selectedRange];
       
       const newChartInstance = new Chart(ctx, {
@@ -114,9 +108,9 @@ export function PortfolioChart({ className }: PortfolioChartProps) {
       });
       
       setChartInstance(newChartInstance);
-    }).catch(err => {
-      console.error('Failed to load Chart.js', err);
-    });
+    } catch (err) {
+      console.error('Failed to create chart', err);
+    }
     
     return () => {
       if (chartInstance) {
