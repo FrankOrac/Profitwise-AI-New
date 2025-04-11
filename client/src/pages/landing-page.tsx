@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { 
   ArrowRight, 
   BarChart, 
@@ -62,6 +63,7 @@ export default function LandingPage() {
             <a href="#features" className="text-slate-600 hover:text-primary-600">Features</a>
             <a href="#how-it-works" className="text-slate-600 hover:text-primary-600">How it Works</a>
             <a href="#testimonials" className="text-slate-600 hover:text-primary-600">Testimonials</a>
+            <ThemeToggle />
             <Link href="/auth">
               <Button variant="ghost">Login</Button>
             </Link>
