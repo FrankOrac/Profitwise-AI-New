@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
@@ -11,41 +11,88 @@ import AdminDashboard from "@/pages/admin/dashboard";
 import { AuthProvider } from "./hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./hooks/use-auth";
+import { useEffect, useState } from "react";
 
-function ProtectedRoute({ 
-  component: Component, 
+// Simple component to display during loading
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+    </div>
+  );
+}
+
+// Simpler Auth gate that works with wouter
+function ProtectedRoute({
+  component: Component,
   adminOnly = false
-}: { 
-  component: React.ComponentType; 
+}: {
+  component: React.ComponentType;
   adminOnly?: boolean;
 }) {
   const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        navigate("/auth");
+      } else if (adminOnly && user.role !== "admin") {
+        navigate("/");
+      }
+    }
+  }, [user, isLoading, adminOnly, navigate]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!user) {
-    window.location.href = "/auth";
     return null;
   }
 
   if (adminOnly && user.role !== "admin") {
-    window.location.href = "/";
     return null;
   }
 
   return <Component />;
 }
 
-function AppRoutes() {
+// Login gate to redirect away if already logged in
+function LoginGate() {
+  const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate("/");
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  if (user) {
+    return null;
+  }
+
+  return <AuthPage />;
+}
+
+// Main app with all routes
+function AppWithAuth() {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <Switch>
-      <Route path="/auth" component={AuthPage} />
+      <Route path="/auth">
+        <LoginGate />
+      </Route>
       <Route path="/">
         <ProtectedRoute component={HomePage} />
       </Route>
@@ -64,7 +111,9 @@ function AppRoutes() {
       <Route path="/admin/dashboard">
         <ProtectedRoute component={AdminDashboard} adminOnly={true} />
       </Route>
-      <Route component={NotFound} />
+      <Route>
+        <NotFound />
+      </Route>
     </Switch>
   );
 }
@@ -72,10 +121,8 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <>
-        <AppRoutes />
-        <Toaster />
-      </>
+      <AppWithAuth />
+      <Toaster />
     </AuthProvider>
   );
 }

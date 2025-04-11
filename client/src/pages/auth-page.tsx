@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { z } from "zod";
