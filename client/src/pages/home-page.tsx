@@ -89,14 +89,56 @@ export default function HomePage() {
             <div className="mb-8">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold">Educational Resources</h2>
-                <Link href="/education" className="text-primary-600 text-sm font-medium">
+                <Link href="/education" className="text-primary-600 text-sm font-medium hover:underline">
                   View All
                 </Link>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {educationContent.slice(0, 3).map((content) => (
+                {educationContent?.slice(0, 3).map((content) => (
                   <EducationCard key={content.id} content={content} />
+                ))}
+              </div>
+            </div>
+
+            {/* User Management Section for Admins */}
+            {user?.role === 'admin' && (
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-bold">User Management</h2>
+                  <Link href="/admin/users" className="text-primary-600 text-sm font-medium hover:underline">
+                    Manage Users
+                  </Link>
+                </div>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <MetricCard 
+                        title="Total Users"
+                        value={educationContent?.length.toString() || "0"}
+                        subValue="Active users"
+                        badgeText="+12%"
+                        badgeVariant="success"
+                      />
+                      <MetricCard 
+                        title="Pro Users"
+                        value="24"
+                        subValue="Subscribed users"
+                        badgeText="+5%"
+                        badgeVariant="success"
+                      />
+                      <MetricCard 
+                        title="New Users"
+                        value="8"
+                        subValue="Last 7 days"
+                        badgeText="+3"
+                        badgeVariant="info"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
                 ))}
               </div>
             </div>
