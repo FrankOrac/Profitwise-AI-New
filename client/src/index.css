@@ -3,6 +3,104 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222 89% 42%;
+    --primary-foreground: 210 40% 98%;
+    --primary-50: 222 89% 97%;
+    --primary-100: 222 89% 94%;
+    --primary-200: 222 89% 88%;
+    --primary-300: 222 89% 78%;
+    --primary-400: 222 89% 68%;
+    --primary-500: 222 89% 58%;
+    --primary-600: 222 89% 42%;
+    --primary-700: 222 89% 36%;
+    --primary-800: 222 89% 30%;
+    --primary-900: 222 89% 24%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 145 63% 42%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+
+    --card: 222 47% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --primary: 222 89% 42%;
+    --primary-foreground: 210 40% 98%;
+    --primary-50: 222 89% 20%;
+    --primary-100: 222 89% 25%;
+    --primary-200: 222 89% 30%;
+    --primary-300: 222 89% 35%;
+    --primary-400: 222 89% 40%;
+    --primary-500: 222 89% 45%;
+    --primary-600: 222 89% 50%;
+    --primary-700: 222 89% 55%;
+    --primary-800: 222 89% 60%;
+    --primary-900: 222 89% 65%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 145 63% 42%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+
+    --ring: 217 33% 17%;
+
+    --radius: 0.5rem;
+  }
+
   * {
     @apply border-border;
   }
@@ -10,4 +108,36 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
+
+/* Custom utility classes */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-blue-600;
+}
+
+.dark .gradient-text {
+  @apply from-primary-400 to-blue-400;
+}
+
+/* Page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
 }
