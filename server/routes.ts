@@ -86,9 +86,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create and sign transaction
       const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL);
-      const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+      const signingWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+      
+      // Validate transaction parameters
+      if (!ethers.isAddress(to)) {
+        return res.status(400).json({ message: "Invalid recipient address" });
+      }
 
-      const tx = await wallet.sendTransaction({
+      const tx = await signingWallet.sendTransaction({
         to,
         value: ethers.parseEther(value)
       });
