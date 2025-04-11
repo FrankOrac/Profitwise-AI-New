@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import Sidebar from "@/components/ui/sidebar";
@@ -79,6 +78,7 @@ export default function EducationManagement() {
       category: formData.get("category") as string,
       difficulty: formData.get("difficulty") as string,
       duration: formData.get("duration") as string,
+      instructor: formData.get("instructor") as string,
       imageUrl: formData.get("imageUrl") as string,
       videoUrl: formData.get("videoUrl") as string,
       accessTier: formData.get("accessTier") as string,
@@ -119,108 +119,96 @@ export default function EducationManagement() {
                     Add Content
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add Educational Content</DialogTitle>
+                    <DialogTitle>{editingContent ? "Edit Content" : "Add New Content"}</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Title</label>
-                        <Input name="title" required />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Category</label>
-                        <Select name="category" required>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="INVESTING">Investing</SelectItem>
-                            <SelectItem value="CRYPTOCURRENCY">Cryptocurrency</SelectItem>
-                            <SelectItem value="TRADING">Trading</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Description</label>
-                      <Textarea name="description" required />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Difficulty</label>
-                        <Select name="difficulty" required>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select difficulty" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Beginner">Beginner</SelectItem>
-                            <SelectItem value="Intermediate">Intermediate</SelectItem>
-                            <SelectItem value="Advanced">Advanced</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Duration</label>
-                        <Input name="duration" placeholder="e.g. 15 min" required />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Image URL</label>
-                        <Input name="imageUrl" type="url" required />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Video URL</label>
-                        <Input name="videoUrl" type="url" required />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Access Tier</label>
-                      <Select name="accessTier" required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select access tier" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="basic">Basic</SelectItem>
-                          <SelectItem value="pro">Pro</SelectItem>
-                          <SelectItem value="enterprise">Enterprise</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit">Save Content</Button>
-                    </div>
+                    <Input
+                      name="title"
+                      placeholder="Title"
+                      defaultValue={editingContent?.title}
+                      required
+                    />
+                    <Textarea
+                      name="description"
+                      placeholder="Description"
+                      defaultValue={editingContent?.description}
+                      required
+                    />
+                    <Select name="category" defaultValue={editingContent?.category || "INVESTING"}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="INVESTING">Investing</SelectItem>
+                        <SelectItem value="CRYPTOCURRENCY">Cryptocurrency</SelectItem>
+                        <SelectItem value="ANALYSIS">Analysis</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select name="difficulty" defaultValue={editingContent?.difficulty || "Beginner"}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Difficulty" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Beginner">Beginner</SelectItem>
+                        <SelectItem value="Intermediate">Intermediate</SelectItem>
+                        <SelectItem value="Advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      name="duration"
+                      placeholder="Duration (e.g., 15 min)"
+                      defaultValue={editingContent?.duration}
+                      required
+                    />
+                    <Input
+                      name="instructor"
+                      placeholder="Instructor name"
+                      defaultValue={editingContent?.instructor}
+                      required
+                    />
+                    <Input
+                      name="imageUrl"
+                      placeholder="Image URL"
+                      defaultValue={editingContent?.imageUrl}
+                    />
+                    <Input
+                      name="videoUrl"
+                      placeholder="Video URL"
+                      defaultValue={editingContent?.videoUrl}
+                    />
+                    <Select name="accessTier" defaultValue={editingContent?.accessTier || "basic"}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Access Tier" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="basic">Basic</SelectItem>
+                        <SelectItem value="pro">Pro</SelectItem>
+                        <SelectItem value="enterprise">Enterprise</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button type="submit" className="w-full">
+                      {editingContent ? "Update Content" : "Add Content"}
+                    </Button>
                   </form>
                 </DialogContent>
               </Dialog>
             </div>
 
-            {isLoading ? (
-              <Card>
-                <CardContent className="flex justify-center items-center py-10">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 gap-6">
-                {content.map((item) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {isLoading ? (
+                <div className="col-span-full flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : (
+                content.map((item) => (
                   <Card key={item.id}>
                     <CardContent className="p-6">
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-                          <p className="text-slate-500 mb-4">{item.description}</p>
-                          <div className="flex gap-4 text-sm">
-                            <span className="text-primary-600">{item.category}</span>
-                            <span>{item.difficulty}</span>
-                            <span>{item.duration}</span>
-                            <span className="capitalize">{item.accessTier} Access</span>
-                          </div>
+                          <h3 className="font-semibold mb-1">{item.title}</h3>
+                          <p className="text-sm text-slate-500">{item.description}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -231,7 +219,7 @@ export default function EducationManagement() {
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="destructive"
+                            variant="outline"
                             size="icon"
                             onClick={() => deleteMutation.mutate(item.id)}
                           >
@@ -239,121 +227,33 @@ export default function EducationManagement() {
                           </Button>
                         </div>
                       </div>
+                      <div className="text-sm">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="font-medium">Category:</span> {item.category}
+                          </div>
+                          <div>
+                            <span className="font-medium">Difficulty:</span> {item.difficulty}
+                          </div>
+                          <div>
+                            <span className="font-medium">Duration:</span> {item.duration}
+                          </div>
+                          <div>
+                            <span className="font-medium">Access:</span> {item.accessTier}
+                          </div>
+                          <div>
+                            <span className="font-medium">Instructor:</span> {item.instructor}
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </main>
         </div>
       </div>
-
-      <Dialog open={!!editingContent} onOpenChange={(open) => !open && setEditingContent(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Educational Content</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
-                <Input
-                  name="title"
-                  defaultValue={editingContent?.title}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Category</label>
-                <Select name="category" defaultValue={editingContent?.category}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="INVESTING">Investing</SelectItem>
-                    <SelectItem value="CRYPTOCURRENCY">Cryptocurrency</SelectItem>
-                    <SelectItem value="TRADING">Trading</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
-              <Textarea
-                name="description"
-                defaultValue={editingContent?.description}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Difficulty</label>
-                <Select name="difficulty" defaultValue={editingContent?.difficulty}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select difficulty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Duration</label>
-                <Input
-                  name="duration"
-                  defaultValue={editingContent?.duration}
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Image URL</label>
-                <Input
-                  name="imageUrl"
-                  type="url"
-                  defaultValue={editingContent?.imageUrl}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Video URL</label>
-                <Input
-                  name="videoUrl"
-                  type="url"
-                  defaultValue={editingContent?.videoUrl}
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Access Tier</label>
-              <Select name="accessTier" defaultValue={editingContent?.accessTier}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select access tier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="basic">Basic</SelectItem>
-                  <SelectItem value="pro">Pro</SelectItem>
-                  <SelectItem value="enterprise">Enterprise</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                type="button"
-                onClick={() => setEditingContent(null)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Update Content</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
