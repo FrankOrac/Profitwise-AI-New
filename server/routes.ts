@@ -153,6 +153,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const plans = await storage.getAllSubscriptionPlans();
     res.json(plans);
   });
+
+  app.post("/api/subscriptions/subscribe", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const { planId } = req.body;
+    const userId = req.user!.id;
+    
+    try {
+      // In production, integrate with a payment processor here
+      const subscription = await storage.createSubscription({
+        userId,
+        planId,
+        status: "active",
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+      });
+      
+      res.status(201).json(subscription);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create subscription" });
+    }
+  });
+
+  app.get("/api/subscriptions/current", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const subscription = await storage.getCurrentSubscription(userId);
+    res.json(subscription);
+  });
   
   // Admin routes for user management
   app.get("/api/admin/users", async (req, res) => {

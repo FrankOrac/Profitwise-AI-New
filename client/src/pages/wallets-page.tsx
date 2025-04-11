@@ -28,10 +28,17 @@ type Wallet = {
   connected: boolean;
 };
 
+type Transaction = {
+  date: string;
+  type: string;
+  amount: string;
+  status: 'completed' | 'pending' | 'failed';
+}
+
 export default function WalletsPage() {
   const { toast } = useToast();
   const [showConnectForm, setShowConnectForm] = useState(false);
-  
+
   // Mock wallet data
   const wallets: Wallet[] = [
     {
@@ -62,7 +69,15 @@ export default function WalletsPage() {
       connected: false
     }
   ];
-  
+
+  const transactions: Transaction[] = [
+    { date: '2024-03-08', type: 'Deposit', amount: '1.5 ETH', status: 'completed' },
+    { date: '2024-03-07', type: 'Withdrawal', amount: '0.2 BTC', status: 'pending' },
+    { date: '2024-03-06', type: 'Trade', amount: '10 SOL', status: 'completed' },
+    { date: '2024-03-05', type: 'Deposit', amount: '50 USDC', status: 'failed' },
+  ];
+
+
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
     toast({
@@ -70,7 +85,7 @@ export default function WalletsPage() {
       description: "Wallet address copied to clipboard",
     });
   };
-  
+
   const handleConnect = () => {
     // Mock connecting wallet
     toast({
@@ -98,7 +113,7 @@ export default function WalletsPage() {
                   Connect Wallet
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-1 gap-6">
                 {showConnectForm && (
                   <Card>
@@ -135,14 +150,14 @@ export default function WalletsPage() {
                     </CardFooter>
                   </Card>
                 )}
-                
+
                 <Tabs defaultValue="connected">
                   <TabsList className="mb-6">
                     <TabsTrigger value="connected">Connected Wallets</TabsTrigger>
                     <TabsTrigger value="assets">Crypto Assets</TabsTrigger>
                     <TabsTrigger value="transactions">Transactions</TabsTrigger>
                   </TabsList>
-                  
+
                   <TabsContent value="connected">
                     {wallets.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -222,7 +237,7 @@ export default function WalletsPage() {
                       </Card>
                     )}
                   </TabsContent>
-                  
+
                   <TabsContent value="assets">
                     <Card>
                       <CardHeader>
@@ -289,7 +304,7 @@ export default function WalletsPage() {
                       </CardContent>
                     </Card>
                   </TabsContent>
-                  
+
                   <TabsContent value="transactions">
                     <Card>
                       <CardHeader>
@@ -298,12 +313,43 @@ export default function WalletsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="border rounded-md">
-                          <div className="p-4 text-center">
-                            <p className="text-slate-500">Coming soon! Transaction history will be available in the next update.</p>
-                            <Button variant="outline" className="mt-4">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              View on Block Explorer
-                            </Button>
+                          <div className="space-y-4">
+                            <div className="overflow-x-auto">
+                              <table className="w-full">
+                                <thead>
+                                  <tr className="border-b">
+                                    <th className="text-left p-2">Date</th>
+                                    <th className="text-left p-2">Type</th>
+                                    <th className="text-left p-2">Amount</th>
+                                    <th className="text-left p-2">Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {transactions.map((tx, i) => (
+                                    <tr key={i} className="border-b">
+                                      <td className="p-2">{tx.date}</td>
+                                      <td className="p-2">{tx.type}</td>
+                                      <td className="p-2">{tx.amount}</td>
+                                      <td className="p-2">
+                                        <span className={`px-2 py-1 rounded-full text-xs ${
+                                          tx.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                          tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                          'bg-red-100 text-red-800'
+                                        }`}>
+                                          {tx.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            <div className="flex justify-end">
+                              <Button variant="outline">
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                View on Block Explorer
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

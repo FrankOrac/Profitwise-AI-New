@@ -24,7 +24,7 @@ const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
-  
+
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
       pool, 
@@ -72,7 +72,22 @@ export class DatabaseStorage implements IStorage {
 
   // Portfolio operations
   async getPortfolioAssets(userId: number): Promise<PortfolioAsset[]> {
-    return db.select().from(portfolioAssets).where(eq(portfolioAssets.userId, userId));
+    const assets = await db.select().from(portfolioAssets).where(eq(portfolioAssets.userId, userId));
+
+    // Fetch real-time prices from CoinGecko API
+    const updatedAssets = await Promise.all(assets.map(async (asset) => {
+      try {
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${asset.symbol.toLowerCase()}&vs_currencies=usd`);
+        const data = await response.json();
+        const currentPrice = data[asset.symbol.toLowerCase()]?.usd || asset.currentPrice;
+        const value = (parseFloat(asset.quantity) * parseFloat(currentPrice)).toString();
+        return { ...asset, currentPrice: currentPrice.toString(), value };
+      } catch (err) {
+        return asset;
+      }
+    }));
+
+    return updatedAssets;
   }
 
   async addPortfolioAsset(asset: InsertPortfolioAsset): Promise<PortfolioAsset> {
