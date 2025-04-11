@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
@@ -104,6 +103,21 @@ export default function LandingPage() {
               >
                 Watch Demo
               </Button>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative hidden md:block"
+          >
+            <div className="relative w-full aspect-square max-w-lg mx-auto">
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary-600/30 to-primary-600/10 rounded-3xl backdrop-blur-3xl" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4/5 h-4/5 bg-primary-700/50 rounded-2xl flex items-center justify-center">
+                  <BarChart className="w-1/2 h-1/2 text-white/80" />
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
