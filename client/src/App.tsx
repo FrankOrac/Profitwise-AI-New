@@ -107,11 +107,26 @@ function AppWithAuth() {
       <Route path="/auth">
         <LoginGate />
       </Route>
-      <Route path="/home"> {/*Changed path from / to /home */}
+      <Route path="/home">
         <ProtectedRoute component={HomePage} />
       </Route>
       <Route path="/portfolio">
         <ProtectedRoute component={PortfolioPage} />
+      </Route>
+      <Route path="/ai-insights">
+        <ProtectedRoute component={AiInsightsPage} />
+      </Route>
+      <Route path="/wallets">
+        <ProtectedRoute component={WalletsPage} />
+      </Route>
+      <Route path="/social">
+        <ProtectedRoute component={SocialTradingPage} />
+      </Route>
+      <Route path="/education">
+        <ProtectedRoute component={EducationPage} />
+      </Route>
+      <Route path="/tutorials">
+        <ProtectedRoute component={TutorialsPage} />
       </Route>
       <Route path="/ai-insights">
         <ProtectedRoute component={AiInsightsPage} />

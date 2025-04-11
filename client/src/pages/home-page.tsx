@@ -13,28 +13,32 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { EducationalContent } from "@shared/schema";
+import MobileSidebar from "@/components/ui/mobile-sidebar"; // Added import
+import { useMobile } from "@/hooks/use-mobile"; // Added import
+import { useLocation } from "wouter"; // Added import
+
 
 export default function HomePage() {
+  const [location] = useLocation();
   const { user } = useAuth();
-  
+  const isMobile = useMobile(); // Added useMobile hook
+
   const { data: educationContent = [] } = useQuery<EducationalContent[]>({
     queryKey: ["/api/education"],
   });
-  
+
   return (
     <>
       <Helmet>
         <title>Dashboard | ProfitWise AI</title>
       </Helmet>
-      
-      <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] min-h-screen">
-        <div className="hidden md:block">
-          <Sidebar />
-        </div>
-        
-        <div className="flex flex-col">
+
+      <div className="flex h-screen bg-slate-50 dark:bg-slate-900"> {/* Changed to flex */}
+        {!isMobile && <Sidebar />} {/* Conditionally render Sidebar */}
+        <MobileSidebar /> {/* Added MobileSidebar */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          
+
           <main className="bg-slate-50 p-6 flex-1 overflow-y-auto">
             <div className="mb-6">
               <h1 className="text-2xl font-bold mb-2">Dashboard Overview</h1>
@@ -42,7 +46,7 @@ export default function HomePage() {
                 Welcome back, {user?.firstName || user?.username}. Here's your financial summary.
               </p>
             </div>
-            
+
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <MetricCard 
@@ -73,19 +77,19 @@ export default function HomePage() {
                 badgeVariant="info" 
               />
             </div>
-            
+
             {/* Portfolio Performance and Allocation */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               <PortfolioChart className="lg:col-span-2" />
               <AllocationChart />
             </div>
-            
+
             {/* AI Insights and Top Performers */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <AiInsights />
               <TopPerformers />
             </div>
-            
+
             {/* Educational Content */}
             <div className="mb-8">
               <div className="flex justify-between items-center mb-6">
@@ -94,7 +98,7 @@ export default function HomePage() {
                   View All
                 </Link>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {educationContent?.slice(0, 3).map((content) => (
                   <EducationCard key={content.id} content={content} />
@@ -140,7 +144,7 @@ export default function HomePage() {
                 </Card>
               </div>
             )}
-            
+
             {/* Subscription Plans */}
             <SubscriptionPlans />
           </main>
