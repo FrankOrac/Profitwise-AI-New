@@ -121,9 +121,12 @@ export default function WalletsPage() {
             <div className="max-w-6xl mx-auto">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Web3 Wallets</h1>
-                <Button onClick={() => setShowConnectForm(true)}>
+                <Button 
+                  onClick={() => setShowConnectForm(true)}
+                  disabled={connectWallet.isPending}
+                >
                   <Plus className="h-4 w-4 mr-2" />
-                  Connect Wallet
+                  {connectWallet.isPending ? "Connecting..." : "Connect Wallet"}
                 </Button>
               </div>
 
@@ -135,7 +138,19 @@ export default function WalletsPage() {
 
                 <TabsContent value="wallets">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {wallets?.map((wallet: any) => (
+                    {walletsLoading ? (
+                      <Card>
+                        <CardContent className="p-6">
+                          <div>Loading wallets...</div>
+                        </CardContent>
+                      </Card>
+                    ) : !wallets?.length ? (
+                      <Card>
+                        <CardContent className="p-6">
+                          <div>No wallets connected. Click "Connect Wallet" to get started.</div>
+                        </CardContent>
+                      </Card>
+                    ) : wallets?.map((wallet: any) => (
                       <Card key={wallet.id}>
                         <CardHeader>
                           <div className="flex justify-between items-start">
@@ -230,6 +245,7 @@ export default function WalletsPage() {
                         </CardFooter>
                       </Card>
                     ))}
+                    </div>
                   </div>
                 </TabsContent>
 
