@@ -270,12 +270,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Use OpenAI API to generate insights
-      const openai = await storage.getAIService();
-      const analysis = await openai.analyze({
-        portfolio,
-        marketData,
-        userId
+      const { Configuration, OpenAIApi } = require("openai");
+      const configuration = new Configuration({
+        apiKey: process.env.OPENAI_API_KEY,
       });
+      const openai = new OpenAIApi(configuration);
+
+      const prompt = `Analyze this portfolio and market data:
+Portfolio: ${JSON.stringify(portfolio)}
+Market Data: ${JSON.stringify(marketData)}
+
+Provide trading insights in this format:
+- Type: [buy/sell/hold]
+- Title: [brief title]
+- Content: [detailed analysis]
+`;
+
+      const completion = await openai.createCompletion({
+        model: "gpt-3.5-turbo",
+        prompt,
+        max_tokens: 500
+      });
+
+      const analysis = completion.data.choices[0].text;
       
       const newInsight = {
         userId,
