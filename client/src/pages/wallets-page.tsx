@@ -115,14 +115,14 @@ export default function WalletsPage() {
                           <div>No wallets connected. Click "Connect Wallet" to get started.</div>
                         </CardContent>
                       </Card>
-                    ) : wallets?.map((wallet: any) => (
-                      <Card key={wallet.id}>
+                    ) : wallets?.map((wallet: any, index) => (
+                      <Card key={index}> {/* Added index as key */}
                         <CardHeader>
                           <div className="flex justify-between items-start">
                             <div>
                               <CardTitle>{wallet?.name || `${wallet?.type || 'Unknown'} Wallet`}</CardTitle>
                               <CardDescription className="flex items-center mt-1">
-                                {wallet?.type ? `${wallet.type?.toString().charAt(0)?.toUpperCase()}${wallet.type?.toString().slice(1)} Wallet` : 'Unknown Wallet'}
+                                {wallet?.type ? `${String(wallet.type).charAt(0).toUpperCase()}${String(wallet.type).slice(1)} Wallet` : 'Unknown Wallet'}
                               </CardDescription>
                             </div>
                             <Button
@@ -240,8 +240,8 @@ export default function WalletsPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {transactions?.map((tx: any) => (
-                                <tr key={tx.hash} className="border-b">
+                              {transactions?.map((tx: any, index) => (  {/* Added index as key */}
+                                <tr key={index} className="border-b">
                                   <td className="p-2">{tx?.type || '-'}</td>
                                   <td className="p-2">{tx?.value || '-'}</td>
                                   <td className="p-2 font-mono">

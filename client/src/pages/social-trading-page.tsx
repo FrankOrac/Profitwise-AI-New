@@ -363,7 +363,6 @@ export default function SocialTradingPage() {
                   </div>
                 </TabsContent>
 
-                {/* Rest of TabsContent remains largely the same, but might need adjustments for data fetching */}
                 <TabsContent value="traders">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {traders?.map((trader) => (
