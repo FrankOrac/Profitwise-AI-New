@@ -54,6 +54,38 @@ export default function HomePage() {
               </p>
             </div>
 
+            {/* Email Notifications Section */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Email Notifications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">Daily Summary</h3>
+                      <p className="text-sm text-slate-500">Get daily updates about your portfolio performance</p>
+                    </div>
+                    <Switch defaultChecked={true} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">Price Alerts</h3>
+                      <p className="text-sm text-slate-500">Notifications when assets hit your target price</p>
+                    </div>
+                    <Switch defaultChecked={true} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">AI Insights</h3>
+                      <p className="text-sm text-slate-500">Custom trading insights based on your portfolio</p>
+                    </div>
+                    <Switch defaultChecked={false} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <MetricCard 
