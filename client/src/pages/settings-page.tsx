@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Helmet } from "react-helmet-async";
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [notificationSettings, setNotificationSettings] = useState({
     email: true,
     portfolio: true,
