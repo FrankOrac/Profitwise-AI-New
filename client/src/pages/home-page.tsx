@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet";
 import Sidebar from "@/components/ui/sidebar";
+import { Switch } from "@/components/ui/switch";
 import Header from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MetricCard from "@/components/dashboard/metric-card";
