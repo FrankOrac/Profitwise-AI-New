@@ -168,14 +168,14 @@ export default function AdminDashboard() {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
+      const { Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip } = await import('chart.js');
+      Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip);
+
       // Clean up any existing chart on the canvas
       const existingChart = Chart.getChart(canvas);
       if (existingChart) {
         existingChart.destroy();
       }
-
-      const { Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip } = await import('chart.js');
-      Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip);
       
       chartInstance = new Chart(ctx, {
         type: 'line',
