@@ -92,6 +92,13 @@ export function setupAuth(app: Express) {
         password: await hashPassword(userData.password),
       });
 
+      // Send welcome email
+      try {
+        await emailService.sendWelcomeEmail(user);
+      } catch (error) {
+        console.error('Failed to send welcome email:', error);
+      }
+
       req.login(user, (err) => {
         if (err) return next(err);
         res.status(201).json(user);
