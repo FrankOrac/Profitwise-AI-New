@@ -62,6 +62,11 @@ export default function AdminDashboard() {
     refetchInterval: 30000,
   });
 
+  const { data: activityLogs } = useQuery({
+    queryKey: ["/api/admin/activity-logs"],
+    refetchInterval: 15000,
+  });
+
   const statusColors = {
     pending: "bg-yellow-100 text-yellow-800",
     inProgress: "bg-blue-100 text-blue-800",
