@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { insertPortfolioAssetSchema, insertAiInsightSchema } from "@shared/schema";
 import { ethers } from "ethers";
+import axios from 'axios';
 
 const web3WalletSchema = z.object({
   address: z.string(),
@@ -49,21 +50,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Fetch real-time balances
       const walletsWithBalances = await Promise.all(wallets.map(async (wallet) => {
-        try {
-          if (wallet.type === "ethereum") {
-            const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL);
-            const balance = await provider.getBalance(wallet.address);
+        let balance = 0;
+        let tokenBalances = [];
+
+        if (wallet.type === "ethereum") {
+          const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL);
+          balance = await provider.getBalance(wallet.address);
+
+          // Fetch ERC20 token balances
+          const tokenContracts = JSON.parse(process.env.TOKEN_CONTRACTS || '[]');
+          tokenBalances = await Promise.all(tokenContracts.map(async (token) => {
+            const contract = new ethers.Contract(token.address, ['function balanceOf(address) view returns (uint256)'], provider);
+            const tokenBalance = await contract.balanceOf(wallet.address);
             return {
-              ...wallet,
-              balance: ethers.formatEther(balance),
-              lastUpdated: new Date()
+              symbol: token.symbol,
+              balance: ethers.formatUnits(tokenBalance, token.decimals)
             };
-          }
-          return wallet;
-        } catch (err) {
-          console.error(`Failed to fetch balance for ${wallet.address}:`, err);
-          return wallet;
+          }));
+        } else if (wallet.type === "bitcoin") {
+          const response = await axios.get(`https://blockchain.info/balance?active=${wallet.address}`);
+          balance = response.data[wallet.address].final_balance;
         }
+
+        return {
+          ...wallet,
+          balance: balance.toString(), // Ensure balance is a string
+          tokenBalances,
+          lastUpdated: new Date()
+        };
       }));
 
       res.json(walletsWithBalances);
@@ -87,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create and sign transaction
       const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL);
       const signingWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
-      
+
       // Validate transaction parameters
       if (!ethers.isAddress(to)) {
         return res.status(400).json({ message: "Invalid recipient address" });
@@ -148,11 +162,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for portfolio assets
   app.get("/api/portfolio", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const userId = req.user!.id;
       const assets = await storage.getPortfolioAssets(userId);
-      
+
       // Fetch real-time market data for each asset
       const assetsWithMarketData = await Promise.all(assets.map(async (asset) => {
         try {
@@ -168,22 +182,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return asset;
         }
       }));
-      
+
       res.json(assetsWithMarketData);
     } catch (err) {
       console.error("Failed to fetch portfolio:", err);
       res.status(500).json({ message: "Failed to fetch portfolio" });
     }
   });
-  
+
   app.post("/api/portfolio", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const userId = req.user!.id;
       const data = { ...req.body, userId };
       const validatedData = insertPortfolioAssetSchema.parse(data);
-      
+
       const newAsset = await storage.addPortfolioAsset(validatedData);
       res.status(201).json(newAsset);
     } catch (err) {
@@ -193,15 +207,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to add portfolio asset" });
     }
   });
-  
+
   app.delete("/api/portfolio/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const assetId = parseInt(req.params.id);
     if (isNaN(assetId)) {
       return res.status(400).json({ message: "Invalid asset ID" });
     }
-    
+
     const deleted = await storage.deletePortfolioAsset(assetId);
     if (deleted) {
       res.sendStatus(204);
@@ -209,14 +223,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(404).json({ message: "Asset not found" });
     }
   });
-  
+
   // API routes for AI insights
   app.get("/api/insights", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const userId = req.user!.id;
     const insights = await storage.getAiInsights(userId);
-    
+
     // Generate some sample insights if none exist
     if (insights.length === 0) {
       const sampleInsights = [
@@ -245,30 +259,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: "info"
         }
       ];
-      
+
       for (const insight of sampleInsights) {
         await storage.addAiInsight(insight);
       }
-      
+
       const initialInsights = await storage.getAiInsights(userId);
       return res.json(initialInsights);
     }
-    
+
     res.json(insights);
   });
-  
+
   app.post("/api/insights/generate", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const userId = req.user!.id;
-    
+
     try {
       // Get user's portfolio data
       const portfolio = await storage.getPortfolioAssets(userId);
       const marketData = await Promise.all(
         portfolio.map(asset => storage.getMarketData(asset.symbol))
       );
-      
+
       // Use OpenAI API to generate insights
       const { Configuration, OpenAIApi } = require("openai");
       const configuration = new Configuration({
@@ -293,7 +307,7 @@ Provide trading insights in this format:
       });
 
       const analysis = completion.data.choices[0].text;
-      
+
       const newInsight = {
         userId,
         type: "info",
@@ -302,10 +316,10 @@ Provide trading insights in this format:
         icon: "lightbulb",
         status: "info"
       };
-      
+
       const validatedData = insertAiInsightSchema.parse(newInsight);
       const insight = await storage.addAiInsight(validatedData);
-      
+
       res.status(201).json(insight);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -314,15 +328,15 @@ Provide trading insights in this format:
       res.status(500).json({ message: "Failed to generate insight" });
     }
   });
-  
+
   // API routes for educational content
   app.get("/api/education", async (req, res) => {
     try {
       const content = await storage.getAllEducationalContent();
       const { category, difficulty, search } = req.query;
-      
+
       let filteredContent = content;
-      
+
       if (category) {
         filteredContent = filteredContent.filter(c => c.category === category);
       }
@@ -336,40 +350,40 @@ Provide trading insights in this format:
           c.description.toLowerCase().includes(searchStr)
         );
       }
-      
+
       res.json(filteredContent);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch educational content" });
     }
   });
-  
+
   app.get("/api/education/:id", async (req, res) => {
     const contentId = parseInt(req.params.id);
     if (isNaN(contentId)) {
       return res.status(400).json({ message: "Invalid content ID" });
     }
-    
+
     try {
       const content = await storage.getEducationalContentById(contentId);
       if (!content) {
         return res.status(404).json({ message: "Content not found" });
       }
-      
+
       // Get related content in same category
       const relatedContent = await storage.getRelatedContent(content.category, contentId);
-      
+
       res.json({ content, relatedContent });
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch content" });
     }
   });
-  
+
   // Admin routes for educational content management
   app.post("/api/admin/education", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     try {
       const newContent = await storage.addEducationalContent(req.body);
       res.status(201).json(newContent);
@@ -377,17 +391,17 @@ Provide trading insights in this format:
       res.status(500).json({ message: "Failed to create content" });
     }
   });
-  
+
   app.put("/api/admin/education/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     const contentId = parseInt(req.params.id);
     if (isNaN(contentId)) {
       return res.status(400).json({ message: "Invalid content ID" });
     }
-    
+
     try {
       const updatedContent = await storage.updateEducationalContent(contentId, req.body);
       if (!updatedContent) {
@@ -398,17 +412,17 @@ Provide trading insights in this format:
       res.status(500).json({ message: "Failed to update content" });
     }
   });
-  
+
   app.delete("/api/admin/education/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     const contentId = parseInt(req.params.id);
     if (isNaN(contentId)) {
       return res.status(400).json({ message: "Invalid content ID" });
     }
-    
+
     try {
       const deleted = await storage.deleteEducationalContent(contentId);
       if (!deleted) {
@@ -419,27 +433,27 @@ Provide trading insights in this format:
       res.status(500).json({ message: "Failed to delete content" });
     }
   });
-  
+
   // API routes for subscription plans
   app.get("/api/subscriptions", async (req, res) => {
     const plans = await storage.getAllSubscriptionPlans();
     res.json(plans);
   });
-  
+
   app.post("/api/subscriptions/subscribe", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const { planId, paymentMethodId } = req.body;
     const userId = req.user!.id;
-    
+
     try {
       const plan = await storage.getSubscriptionPlanById(planId);
       if (!plan) {
         return res.status(404).json({ message: "Subscription plan not found" });
       }
-      
+
       const stripe = await storage.getPaymentProcessor();
-      
+
       // Create payment intent
       const paymentIntent = await stripe.paymentIntents.create({
         amount: parseInt(plan.price) * 100, // Convert to cents
@@ -448,7 +462,7 @@ Provide trading insights in this format:
         confirm: true,
         customer: req.user!.stripeCustomerId
       });
-      
+
       if (paymentIntent.status === 'succeeded') {
         const subscription = await storage.createSubscription({
           userId,
@@ -457,7 +471,7 @@ Provide trading insights in this format:
           startDate: new Date(),
           endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
         });
-        
+
         res.status(201).json(subscription);
       } else {
         res.status(400).json({ message: "Payment failed" });
@@ -466,27 +480,27 @@ Provide trading insights in this format:
       res.status(500).json({ message: "Failed to create subscription" });
     }
   });
-  
+
   app.get("/api/subscriptions/current", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const userId = req.user!.id;
     const subscription = await storage.getCurrentSubscription(userId);
     res.json(subscription);
   });
-  
+
   // Admin routes for analytics and metrics
   app.get("/api/admin/analytics/overview", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     try {
       const users = await storage.getAllUsers();
       const subscriptions = await storage.getAllSubscriptions();
       const insights = await storage.getAllAiInsights();
       const portfolios = await storage.getAllPortfolios();
-      
+
       const metrics = {
         totalUsers: users.length,
         activeUsers: users.filter(u => u.lastLoginAt > Date.now() - 7 * 24 * 60 * 60 * 1000).length,
@@ -499,18 +513,18 @@ Provide trading insights in this format:
           monthly: users.filter(u => u.createdAt > Date.now() - 30 * 24 * 60 * 60 * 1000).length
         }
       };
-      
+
       res.json(metrics);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch analytics overview" });
     }
   });
-  
+
   app.get("/api/admin/analytics/revenue", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     try {
       const subscriptions = await storage.getAllSubscriptions();
       const last6Months = Array.from({length: 6}, (_, i) => {
@@ -518,26 +532,26 @@ Provide trading insights in this format:
         date.setMonth(date.getMonth() - i);
         return date.toISOString().slice(0, 7); // YYYY-MM format
       }).reverse();
-      
+
       const revenueData = last6Months.map(month => ({
         month,
         revenue: subscriptions
           .filter(s => s.createdAt.startsWith(month))
           .reduce((acc, sub) => acc + parseFloat(sub.amount || '0'), 0)
       }));
-      
+
       res.json(revenueData);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch revenue analytics" });
     }
   });
-  
+
   // Admin routes for user management
   app.get("/api/admin/tasks", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     try {
       const tasks = await storage.getAdminTasks();
       res.json(tasks);
@@ -545,12 +559,12 @@ Provide trading insights in this format:
       res.status(500).json({ message: "Failed to fetch tasks" });
     }
   });
-  
+
   app.get("/api/admin/activity-logs", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     try {
       const logs = await storage.getActivityLogs();
       res.json(logs);
@@ -564,7 +578,7 @@ Provide trading insights in this format:
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     try {
       const apiKeys = await storage.getAPIKeys();
       res.json(apiKeys);
@@ -577,7 +591,7 @@ Provide trading insights in this format:
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     try {
       const updatedKeys = await storage.updateAPIKeys(req.body);
       res.json(updatedKeys);
@@ -585,15 +599,15 @@ Provide trading insights in this format:
       res.status(500).json({ message: "Failed to update API keys" });
     }
   });
-  
+
   // Social Trading Routes
   app.post("/api/social/post", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const { content, symbol, action, position } = req.body;
       const userId = req.user!.id;
-      
+
       const post = await storage.createTradePost({
         userId,
         content,
@@ -602,7 +616,7 @@ Provide trading insights in this format:
         position,
         timestamp: new Date()
       });
-      
+
       res.status(201).json(post);
     } catch (err) {
       res.status(500).json({ message: "Failed to create post" });
@@ -611,11 +625,11 @@ Provide trading insights in this format:
 
   app.post("/api/social/copy-trade", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const { traderId, postId } = req.body;
       const followerId = req.user!.id;
-      
+
       const tradePost = await storage.getTradePostById(postId);
       if (!tradePost) {
         return res.status(404).json({ message: "Trade not found" });
@@ -640,7 +654,7 @@ Provide trading insights in this format:
 
   app.get("/api/social/feed", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const posts = await storage.getTradePosts();
       const postsWithUserData = await Promise.all(posts.map(async (post) => {
@@ -661,7 +675,7 @@ Provide trading insights in this format:
           }
         };
       }));
-      
+
       res.json(postsWithUserData);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch posts" });
@@ -670,7 +684,7 @@ Provide trading insights in this format:
 
   app.get("/api/social/traders/performance", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const traders = await storage.getTopTraders();
       const tradersWithStats = await Promise.all(traders.map(async (trader) => {
@@ -683,7 +697,7 @@ Provide trading insights in this format:
           followers: stats.followers
         };
       }));
-      
+
       res.json(tradersWithStats);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch traders" });
@@ -694,33 +708,33 @@ Provide trading insights in this format:
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     const users = await storage.getAllUsers();
     res.json(users);
   });
-  
+
   app.put("/api/admin/users/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.sendStatus(401);
     }
-    
+
     const userId = parseInt(req.params.id);
     if (isNaN(userId)) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
-    
+
     try {
       const updatedUser = await storage.updateUser(userId, req.body);
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       res.json(updatedUser);
     } catch (err) {
       res.status(500).json({ message: "Failed to update user" });
     }
   });
-  
+
   const httpServer = createServer(app);
   return httpServer;
 }

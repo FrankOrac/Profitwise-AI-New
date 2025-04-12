@@ -1,0 +1,15 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+  <h2>Portfolio Update</h2>
+  <p>Total Value: $<%= update.totalValue %></p>
+  <p>Daily Change: <%= update.dailyChange %>%</p>
+  <p>Notable Changes:</p>
+  <ul>
+    <% update.changes.forEach(function(change) { %>
+      <li><%= change.symbol %>: <%= change.percentage %>%</li>
+    <% }); %>
+  </ul>
+</body>
+</html>
