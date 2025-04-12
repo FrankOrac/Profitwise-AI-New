@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
@@ -8,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import {
   ArrowUpRight,
   CreditCard,
@@ -20,22 +20,22 @@ import {
   CheckCircle2,
   RefreshCw
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function WalletsPage() {
   const { toast } = useToast();
   const [showConnectForm, setShowConnectForm] = useState(false);
   const [sendAmount, setSendAmount] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
-  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
 
   const { data: wallets, isLoading: walletsLoading, refetch: refetchWallets } = useQuery({
     queryKey: ["/api/web3/wallets"],
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000
   });
 
   const { data: transactions, isLoading: txLoading } = useQuery({
     queryKey: ["/api/web3/transactions"],
-    refetchInterval: 10000 // Refresh every 10 seconds
+    refetchInterval: 10000
   });
 
   const connectWallet = useMutation({
@@ -55,13 +55,6 @@ export default function WalletsPage() {
       });
       refetchWallets();
       setShowConnectForm(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Connection Failed",
-        description: error.message,
-        variant: "destructive"
-      });
     }
   });
 
@@ -75,39 +68,15 @@ export default function WalletsPage() {
       if (!res.ok) throw new Error("Failed to send transaction");
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
         title: "Transaction Sent",
-        description: `Transaction hash: ${data.hash.slice(0, 10)}...`
+        description: "Transaction has been sent successfully"
       });
       setSendAmount("");
       setRecipientAddress("");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Transaction Failed",
-        description: error.message,
-        variant: "destructive"
-      });
     }
   });
-
-  const handleSend = (walletId: string) => {
-    if (!sendAmount || !recipientAddress) {
-      toast({
-        title: "Invalid Input",
-        description: "Please enter amount and recipient address",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    sendTransaction.mutate({
-      walletId,
-      to: recipientAddress,
-      value: sendAmount
-    });
-  };
 
   return (
     <>
@@ -121,12 +90,9 @@ export default function WalletsPage() {
             <div className="max-w-6xl mx-auto">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Web3 Wallets</h1>
-                <Button 
-                  onClick={() => setShowConnectForm(true)}
-                  disabled={connectWallet.isPending}
-                >
+                <Button onClick={() => setShowConnectForm(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  {connectWallet.isPending ? "Connecting..." : "Connect Wallet"}
+                  Connect Wallet
                 </Button>
               </div>
 
@@ -150,14 +116,14 @@ export default function WalletsPage() {
                           <div>No wallets connected. Click "Connect Wallet" to get started.</div>
                         </CardContent>
                       </Card>
-                    ) : wallets?.map((wallet: any, index) => (
-                      <Card key={wallet.id}> {/* Added key prop */}
+                    ) : wallets?.map((wallet: any) => (
+                      <Card key={wallet.id}>
                         <CardHeader>
                           <div className="flex justify-between items-start">
                             <div>
                               <CardTitle>{wallet?.name || `${wallet?.type || 'Unknown'} Wallet`}</CardTitle>
                               <CardDescription className="flex items-center mt-1">
-                                {wallet?.type ? `${wallet.type?.charAt(0)?.toUpperCase()}${wallet.type?.slice(1)} Wallet` : 'Unknown Wallet'}
+                                {wallet?.type ? `${wallet.type.charAt(0)?.toUpperCase()}${wallet.type.slice(1)} Wallet` : 'Unknown Wallet'}
                               </CardDescription>
                             </div>
                             <Button
@@ -178,11 +144,15 @@ export default function WalletsPage() {
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-slate-500">Address</span>
                               <div className="flex items-center">
-                                <span className="text-sm font-mono">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</span>
+                                <span className="text-sm font-mono">
+                                  {wallet?.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : 'N/A'}
+                                </span>
                                 <button
                                   onClick={() => {
-                                    navigator.clipboard.writeText(wallet.address);
-                                    toast({ title: "Address copied" });
+                                    if (wallet?.address) {
+                                      navigator.clipboard.writeText(wallet.address);
+                                      toast({ title: "Address copied" });
+                                    }
                                   }}
                                   className="ml-1 text-slate-400 hover:text-slate-700"
                                 >
@@ -195,7 +165,7 @@ export default function WalletsPage() {
                         <CardFooter className="flex justify-between">
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" onClick={() => setSelectedWallet(wallet.id)}>
+                              <Button variant="outline">
                                 <ArrowUpRight className="h-4 w-4 mr-2" />
                                 Send
                               </Button>
@@ -224,7 +194,11 @@ export default function WalletsPage() {
                                 </div>
                                 <Button
                                   className="w-full"
-                                  onClick={() => handleSend(wallet.id)}
+                                  onClick={() => sendTransaction.mutate({
+                                    walletId: wallet.id,
+                                    to: recipientAddress,
+                                    value: sendAmount
+                                  })}
                                   disabled={sendTransaction.isPending}
                                 >
                                   {sendTransaction.isPending ? "Sending..." : "Send"}
@@ -234,7 +208,7 @@ export default function WalletsPage() {
                           </Dialog>
                           <Button variant="outline" asChild>
                             <a
-                              href={`https://etherscan.io/address/${wallet.address}`}
+                              href={`https://etherscan.io/address/${wallet?.address}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -245,7 +219,6 @@ export default function WalletsPage() {
                         </CardFooter>
                       </Card>
                     ))}
-                    </div>
                   </div>
                 </TabsContent>
 
@@ -278,18 +251,18 @@ export default function WalletsPage() {
                                   <td className="p-2">
                                     <span
                                       className={`px-2 py-1 rounded-full text-xs ${
-                                        tx.status === 'completed'
+                                        tx?.status === 'completed'
                                           ? 'bg-green-100 text-green-800'
-                                          : tx.status === 'pending'
+                                          : tx?.status === 'pending'
                                           ? 'bg-yellow-100 text-yellow-800'
                                           : 'bg-red-100 text-red-800'
                                       }`}
                                     >
-                                      {tx.status}
+                                      {tx?.status || 'unknown'}
                                     </span>
                                   </td>
                                   <td className="p-2">
-                                    {new Date(tx.createdAt).toLocaleDateString()}
+                                    {tx?.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '-'}
                                   </td>
                                 </tr>
                               ))}
