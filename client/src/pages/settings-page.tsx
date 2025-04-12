@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Helmet } from "react-helmet-async";
+import { APISettings } from "@/components/admin/api-settings";
 
 export default function SettingsPage() {
   const { toast } = useToast();
