@@ -22,6 +22,9 @@ import WalletsPage from "@/pages/wallets-page";
 import SocialTradingPage from "@/pages/social-trading-page";
 import TutorialsPage from "@/pages/tutorials-page";
 import FrontendManagement from "./pages/admin/frontend-management"; // Added import for FrontendManagement
+import MarketAlerts from "./components/dashboard/market-alerts";
+import TradeJournal from "./components/dashboard/trade-journal";
+import PortfolioRebalance from "./components/dashboard/portfolio-rebalance";
 
 
 // Simple component to display during loading
@@ -142,6 +145,15 @@ function AppWithAuth() {
       </Route>
       <Route path="/tutorials">
         <ProtectedRoute component={TutorialsPage} />
+      </Route>
+      <Route path="/alerts">
+        <ProtectedRoute component={MarketAlerts} />
+      </Route>
+      <Route path="/journal">
+        <ProtectedRoute component={TradeJournal} />
+      </Route>
+      <Route path="/rebalance">
+        <ProtectedRoute component={PortfolioRebalance} />
       </Route>
       <Route path="/profile">
         <ProtectedRoute component={ProfilePage} />
