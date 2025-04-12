@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { PlayCircle } from "lucide-react";
 import { EducationalContent } from "@shared/schema";
+import { useMutation } from "@tanstack/react-query";
 
 interface EducationCardProps {
   content: EducationalContent;
