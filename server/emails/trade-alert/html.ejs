@@ -1,11 +1,24 @@
 
 <!DOCTYPE html>
 <html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; }
+    .alert { padding: 20px; background: #f8f9fa; border-radius: 5px; }
+    .price { font-size: 24px; color: #0050C8; }
+    .action { margin-top: 20px; }
+    .button { background: #0050C8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+  </style>
+</head>
 <body>
-  <h2>Trade Alert: <%= alert.symbol %></h2>
-  <p>Alert Type: <%= alert.type %></p>
-  <p>Price: $<%= alert.price %></p>
-  <p>Message: <%= alert.message %></p>
-  <p>Time: <%= new Date().toLocaleString() %></p>
+  <div class="alert">
+    <h2>Market Alert: <%= symbol %></h2>
+    <p>Your configured alert has been triggered:</p>
+    <p class="price">Current Price: $<%= price %></p>
+    <p><%= message %></p>
+    <div class="action">
+      <a href="<%= actionUrl %>" class="button">View Details</a>
+    </div>
+  </div>
 </body>
 </html>

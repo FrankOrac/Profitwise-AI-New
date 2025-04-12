@@ -1,15 +1,41 @@
 
 <!DOCTYPE html>
 <html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; }
+    .summary { padding: 20px; background: #f8f9fa; border-radius: 5px; }
+    .metric { margin: 10px 0; }
+    .positive { color: #10B981; }
+    .negative { color: #EF4444; }
+  </style>
+</head>
 <body>
-  <h2>Portfolio Update</h2>
-  <p>Total Value: $<%= update.totalValue %></p>
-  <p>Daily Change: <%= update.dailyChange %>%</p>
-  <p>Notable Changes:</p>
-  <ul>
-    <% update.changes.forEach(function(change) { %>
-      <li><%= change.symbol %>: <%= change.percentage %>%</li>
-    <% }); %>
-  </ul>
+  <div class="summary">
+    <h2>Portfolio Update</h2>
+    <div class="metric">
+      <strong>Total Value:</strong> $<%= totalValue %>
+      <span class="<%= dailyChange >= 0 ? 'positive' : 'negative' %>">
+        (<%= dailyChange %>%)
+      </span>
+    </div>
+    <div class="metric">
+      <strong>Top Performers:</strong>
+      <ul>
+        <% topPerformers.forEach(function(asset) { %>
+          <li><%= asset.symbol %>: <%= asset.change %>%</li>
+        <% }); %>
+      </ul>
+    </div>
+    <div class="metric">
+      <strong>Alerts:</strong>
+      <ul>
+        <% alerts.forEach(function(alert) { %>
+          <li><%= alert.message %></li>
+        <% }); %>
+      </ul>
+    </div>
+    <p><a href="<%= dashboardUrl %>">View Full Portfolio</a></p>
+  </div>
 </body>
 </html>

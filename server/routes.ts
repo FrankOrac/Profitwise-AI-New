@@ -300,13 +300,23 @@ Provide trading insights in this format:
 - Content: [detailed analysis]
 `;
 
-      const completion = await openai.createCompletion({
+      const completion = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
-        prompt,
+        messages: [
+          {
+            role: "system",
+            content: "You are a financial analyst providing trading insights based on market data and portfolio analysis."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
         max_tokens: 500
       });
 
-      const analysis = completion.data.choices[0].text;
+      const analysis = completion.choices[0].message.content;
 
       const newInsight = {
         userId,
@@ -635,6 +645,17 @@ Provide trading insights in this format:
         return res.status(404).json({ message: "Trade not found" });
       }
 
+      // Get market data and validate trade
+      const quote = await marketData.getQuote(tradePost.symbol);
+      const follower = await storage.getUser(followerId);
+      const portfolioValue = await storage.getPortfolioValue(followerId);
+      
+      // Risk management check
+      const tradeValue = quote.price * tradePost.position;
+      if (tradeValue > portfolioValue * 0.1) { // Max 10% per trade
+        return res.status(400).json({ message: "Trade exceeds risk limits" });
+      }
+
       // Execute copy trade
       const copyTrade = await storage.executeCopyTrade({
         followerId,
@@ -643,7 +664,16 @@ Provide trading insights in this format:
         symbol: tradePost.symbol,
         action: tradePost.action,
         position: tradePost.position,
+        entryPrice: quote.price,
         timestamp: new Date()
+      });
+
+      // Send notifications
+      await emailService.sendEmail(follower.email, 'trade-alert', {
+        symbol: tradePost.symbol,
+        price: quote.price,
+        message: `Successfully copied trade: ${tradePost.action} ${tradePost.position} ${tradePost.symbol}`,
+        actionUrl: `/portfolio`
       });
 
       res.status(201).json(copyTrade);
