@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet";
 import Sidebar from "@/components/ui/sidebar";
 import Header from "@/components/header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@shared/schema";
