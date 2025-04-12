@@ -11,12 +11,15 @@ export function useMarketData(symbol: string) {
   return useQuery<MarketData>({
     queryKey: ["market", symbol],
     queryFn: async () => {
-      const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${symbol.toLowerCase()}&vs_currencies=usd&include_24hr_vol=true&include_24hr_change=true`);
+      const response = await fetch(`/api/market-data/${symbol}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch market data');
+      }
       const data = await response.json();
       return {
-        price: data[symbol.toLowerCase()].usd,
-        change24h: data[symbol.toLowerCase()].usd_24h_change,
-        volume24h: data[symbol.toLowerCase()].usd_24h_vol
+        price: data.price,
+        change24h: data.changePercent,
+        volume24h: data.volume
       };
     },
     refetchInterval: 30000 // Refresh every 30 seconds

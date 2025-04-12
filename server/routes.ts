@@ -224,6 +224,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/market-data/:symbol", async (req, res) => {
+    try {
+      const { symbol } = req.params;
+      const data = await marketData.getQuote(symbol);
+      res.json(data);
+    } catch (err) {
+      console.error(`Failed to fetch market data for ${req.params.symbol}:`, err);
+      res.status(500).json({ message: "Failed to fetch market data" });
+    }
+  });
+
   app.post("/api/portfolio/rebalance", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
