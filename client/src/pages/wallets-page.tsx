@@ -21,18 +21,27 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function WalletsPage() {
+const WalletsPage = () => {
+  const defaultWallets = [
+    { 
+      name: 'Main Wallet',
+      address: '0x...',
+      balance: '0.00',
+      type: 'ETH',
+      id: 1 // Added ID for key
+    }
+  ];
   const { toast } = useToast();
   const [showConnectForm, setShowConnectForm] = useState(false);
   const [sendAmount, setSendAmount] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
 
-  const { data: wallets, isLoading: walletsLoading, refetch: refetchWallets } = useQuery({
+  const { data: wallets = defaultWallets, isLoading: walletsLoading, refetch: refetchWallets } = useQuery({
     queryKey: ["/api/web3/wallets"],
     refetchInterval: 30000
   });
 
-  const { data: transactions, isLoading: txLoading } = useQuery({
+  const { data: transactions = [], isLoading: txLoading } = useQuery({
     queryKey: ["/api/web3/transactions"],
     refetchInterval: 10000
   });
@@ -115,8 +124,8 @@ export default function WalletsPage() {
                           <div>No wallets connected. Click "Connect Wallet" to get started.</div>
                         </CardContent>
                       </Card>
-                    ) : wallets?.map((wallet: any, index) => (
-                      <Card key={index}> {/* Added index as key */}
+                    ) : wallets?.map((wallet: any) => (
+                      <Card key={wallet.id}>
                         <CardHeader>
                           <div className="flex justify-between items-start">
                             <div>
@@ -240,8 +249,8 @@ export default function WalletsPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {transactions?.map((tx: any, index) => (  {/* Added index as key */}
-                                <tr key={index} className="border-b">
+                              {transactions?.map((tx: any) => (
+                                <tr key={tx.id} className="border-b">
                                   <td className="p-2">{tx?.type || '-'}</td>
                                   <td className="p-2">{tx?.value || '-'}</td>
                                   <td className="p-2 font-mono">
@@ -280,3 +289,4 @@ export default function WalletsPage() {
     </>
   );
 }
+export default WalletsPage;

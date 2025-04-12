@@ -93,6 +93,15 @@ export default function SocialTradingPage() {
     });
   }, [tradePosts, searchQuery, selectedAction]);
 
+  const defaultTraders = [
+    {
+      name: 'Demo Trader',
+      performance: '0%',
+      followers: 0,
+      risk: 'Low'
+    }
+  ];
+
   return (
     <>
       <Helmet>
@@ -288,7 +297,7 @@ export default function SocialTradingPage() {
                         </CardHeader>
                         <CardContent className="p-0">
                           <div className="divide-y">
-                            {traders?.map((trader) => (
+                            {(traders || defaultTraders).map((trader) => (
                               <div key={trader.id} className="p-4">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-3">
@@ -365,7 +374,7 @@ export default function SocialTradingPage() {
 
                 <TabsContent value="traders">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {traders?.map((trader, index) => (
+                    {(traders || defaultTraders).map((trader, index) => (
                       <Card key={index}>
                         <CardContent className="p-6">
                           <div className="flex flex-col items-center">
@@ -390,11 +399,11 @@ export default function SocialTradingPage() {
                             <div className="grid grid-cols-3 w-full gap-2 mb-4">
                               <div className="text-center p-2 bg-slate-50 rounded-md">
                                 <div className="text-xs text-slate-500">Performance</div>
-                                <div className="font-bold text-green-600">{trader?.performance || 0}</div>
+                                <div className="font-bold text-green-600">{trader?.performance || 0}%</div>
                               </div>
                               <div className="text-center p-2 bg-slate-50 rounded-md">
                                 <div className="text-xs text-slate-500">Win Rate</div>
-                                <div className="font-bold">{trader?.winRate || 0}</div>
+                                <div className="font-bold">{trader?.winRate || 0}%</div>
                               </div>
                               <div className="text-center p-2 bg-slate-50 rounded-md">
                                 <div className="text-xs text-slate-500">Followers</div>
