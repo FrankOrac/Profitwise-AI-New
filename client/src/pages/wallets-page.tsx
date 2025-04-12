@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
@@ -123,7 +122,7 @@ export default function WalletsPage() {
                             <div>
                               <CardTitle>{wallet?.name || `${wallet?.type || 'Unknown'} Wallet`}</CardTitle>
                               <CardDescription className="flex items-center mt-1">
-                                {wallet?.type ? `${wallet.type.charAt(0)?.toUpperCase()}${wallet.type.slice(1)} Wallet` : 'Unknown Wallet'}
+                                {wallet?.type ? `${wallet.type?.toString().charAt(0)?.toUpperCase()}${wallet.type?.toString().slice(1)} Wallet` : 'Unknown Wallet'}
                               </CardDescription>
                             </div>
                             <Button
