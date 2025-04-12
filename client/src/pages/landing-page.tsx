@@ -12,7 +12,10 @@ import {
   CircleDollarSign,
   TrendingUp,
   Lightbulb,
-  CheckCircle2
+  BookOpen,
+  RefreshCw,
+  LineChart,
+  PencilLine
 } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -23,10 +26,12 @@ export default function LandingPage() {
   const features = [
     { icon: <Brain />, title: "AI-Powered Insights", description: "Advanced algorithms analyze market trends" },
     { icon: <ChartLine />, title: "Real-Time Analytics", description: "Live market data and portfolio tracking" },
-    { icon: <Shield />, title: "Enterprise Security", description: "Bank-grade encryption and protection" },
-    { icon: <Users />, title: "Social Trading", description: "Learn from successful investors" },
-    { icon: <Zap />, title: "Instant Execution", description: "Lightning-fast trade processing" },
-    { icon: <CircleDollarSign />, title: "Smart Portfolio", description: "Automated portfolio rebalancing" }
+    { icon: <RefreshCw />, title: "Portfolio Rebalancing", description: "Automated portfolio optimization" },
+    { icon: <PencilLine />, title: "Trade Journal", description: "Track and analyze your trades" },
+    { icon: <LineChart />, title: "Market Alerts", description: "Real-time market notifications" },
+    { icon: <Users />, title: "Social Trading", description: "Learn from successful traders" },
+    { icon: <Shield />, title: "Enterprise Security", description: "Bank-grade encryption" },
+    { icon: <BookOpen />, title: "Educational Hub", description: "Comprehensive learning resources" }
   ];
 
   const testimonials = [

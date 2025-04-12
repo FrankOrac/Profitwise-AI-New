@@ -6,12 +6,17 @@ import {
   Bot,
   Wallet,
   Users,
-  Book,
+  BookOpen,
   Video,
   User,
   Settings,
   Crown,
-  LogOut
+  LogOut,
+  LineChart,
+  Brain,
+  Bell,
+  PencilLine,
+  RefreshCw
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -27,7 +32,7 @@ interface NavItemProps {
 const NavItem: FC<NavItemProps> = ({ icon, label, href, isActive }) => {
   return (
     <li>
-      <Link href={href} onClick={() => {}}> {/* Added onClick to handle potential mobile sidebar closing */}
+      <Link href={href} onClick={() => {}}>
         <div
           className={cn(
             "flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer",
@@ -62,24 +67,24 @@ export function Sidebar({ closeMobileSidebar }: SidebarProps) {
     logoutMutation.mutate();
   };
 
-  const navItems = [
-    { icon: <Home className="w-5 h-5 mr-2" />, label: "Overview", href: "/" },
-    { icon: <PieChart className="w-5 h-5 mr-2" />, label: "Portfolio", href: "/portfolio" },
-    { icon: <Bot className="w-5 h-5 mr-2" />, label: "AI Insights", href: "/ai-insights" },
-    { icon: <Wallet className="w-5 h-5 mr-2" />, label: "Web3 Wallets", href: "/wallets" },
-    { icon: <Users className="w-5 h-5 mr-2" />, label: "Social Trading", href: "/social" },
+  const menuItems = [
+    { icon: <Home />, label: "Dashboard", href: "/home" },
+    { icon: <LineChart />, label: "Portfolio", href: "/portfolio" },
+    { icon: <Brain />, label: "AI Insights", href: "/ai-insights" },
+    { icon: <Wallet />, label: "Wallets", href: "/wallets" },
+    { icon: <Users />, label: "Social Trading", href: "/social" },
+    { icon: <BookOpen />, label: "Education", href: "/education" },
+    { icon: <Bell />, label: "Alerts", href: "/alerts" },
+    { icon: <PencilLine />, label: "Trade Journal", href: "/journal" },
+    { icon: <RefreshCw />, label: "Rebalancing", href: "/rebalance" },
+    { icon: <Settings />, label: "Settings", href: "/settings" }
   ];
 
-  const learnItems = [
-    { icon: <Book className="w-5 h-5 mr-2" />, label: "Education Hub", href: "/education" },
-    { icon: <Video className="w-5 h-5 mr-2" />, label: "Tutorials", href: "/tutorials" },
-  ];
+  //Filter menuItems into Dashboard, Learn, Settings categories.  Admin items remain separate.
+  const dashboardItems = menuItems.filter(item => item.href.startsWith('/')); //Consider more robust filtering if needed.
+  const learnItems = menuItems.filter(item => item.href === '/education');
+  const settingsItems = menuItems.filter(item => item.href === '/settings');
 
-  const settingsItems = [
-    { icon: <User className="w-5 h-5 mr-2" />, label: "Profile", href: "/profile" },
-    { icon: <Settings className="w-5 h-5 mr-2" />, label: "Settings", href: "/settings" },
-    { icon: <Crown className="w-5 h-5 mr-2" />, label: "Subscription", href: "/subscription" },
-  ];
 
   // Admin items only shown to admin users
   const adminItems = user?.role === 'admin' ? [
@@ -104,7 +109,7 @@ export function Sidebar({ closeMobileSidebar }: SidebarProps) {
             Dashboard
           </div>
           <ul className="space-y-1">
-            {navItems.map((item) => (
+            {dashboardItems.map((item) => (
               <NavItem
                 key={item.href}
                 icon={item.icon}

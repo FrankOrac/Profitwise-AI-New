@@ -1,4 +1,3 @@
-
 # Database Schema
 
 ## Tables
@@ -36,6 +35,37 @@
 - content: text
 - icon: text
 - status: text
+- createdAt: timestamp
+
+### tradeJournals
+- id: serial primary key
+- userId: integer
+- symbol: text
+- type: text (buy/sell)
+- quantity: decimal
+- price: decimal
+- date: timestamp
+- notes: text
+- pnl: decimal
+- createdAt: timestamp
+
+### marketAlerts
+- id: serial primary key
+- userId: integer
+- symbol: text
+- type: text
+- condition: text
+- value: decimal
+- status: text
+- createdAt: timestamp
+
+### portfolioRebalancing
+- id: serial primary key
+- userId: integer
+- symbol: text
+- currentAllocation: decimal
+- targetAllocation: decimal
+- lastRebalanced: timestamp
 - createdAt: timestamp
 
 ### educationalContent
