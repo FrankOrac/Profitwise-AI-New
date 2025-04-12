@@ -19,6 +19,7 @@ import {
   Activity,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import Chart from "@/lib/chart-setup";
 
 interface MetricCardProps {
   title: string;
@@ -168,8 +169,7 @@ export default function AdminDashboard() {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const { Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip } = await import('chart.js');
-      Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip);
+      // Chart.js components are already registered in chart-setup.ts
 
       // Clean up any existing chart on the canvas
       const existingChart = Chart.getChart(canvas);
