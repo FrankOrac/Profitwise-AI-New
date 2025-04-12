@@ -17,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-// import AllocationChart from "@/components/dashboard/allocation-chart";
-// import PortfolioChart from "@/components/dashboard/portfolio-chart";
+import AllocationChart from "@/components/dashboard/allocation-chart";
+import PortfolioChart from "@/components/dashboard/portfolio-chart";
 
 interface Asset {
   id: number;
@@ -206,10 +206,10 @@ export default function PortfolioPage() {
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="mt-6">
-                {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                   <PortfolioChart className="lg:col-span-2" />
                   <AllocationChart />
-                </div> */}
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                   <TradeJournal />
