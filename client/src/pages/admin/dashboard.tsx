@@ -99,14 +99,16 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!userChartRef.current) return;
-    if (userChartInstance) {
-      userChartInstance.destroy();
-    }
+    
+    const setupChart = async () => {
+      if (userChartInstance) {
+        userChartInstance.destroy();
+      }
 
-    const ctx = userChartRef.current.getContext('2d');
-    if (!ctx) return;
+      const ctx = userChartRef.current.getContext('2d');
+      if (!ctx) return;
 
-    import('chart.js').then(({ Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip }) => {
+      const { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip } = await import('chart.js');
       Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
       const newChartInstance = new Chart(ctx, {
@@ -145,7 +147,9 @@ export default function AdminDashboard() {
       });
 
       setUserChartInstance(newChartInstance);
-    });
+    };
+
+    setupChart();
 
     return () => {
       if (userChartInstance) {
