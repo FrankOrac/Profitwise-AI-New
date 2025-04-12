@@ -45,11 +45,12 @@ export default function SettingsPage() {
               <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
               <Tabs defaultValue="notifications">
-                <TabsList className="grid w-full grid-cols-4 mb-6">
+                <TabsList className="grid w-full grid-cols-5 mb-6">
                   <TabsTrigger value="notifications">Notifications</TabsTrigger>
                   <TabsTrigger value="security">Security</TabsTrigger>
                   <TabsTrigger value="preferences">Preferences</TabsTrigger>
                   <TabsTrigger value="api">API Access</TabsTrigger>
+                  {user?.role === 'admin' && <TabsTrigger value="admin">Admin</TabsTrigger>}
                 </TabsList>
 
                 <TabsContent value="notifications">
@@ -178,6 +179,44 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
                 </TabsContent>
+                {user?.role === 'admin' && (
+                  <TabsContent value="admin">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Admin Settings</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <Label>Maintenance Mode</Label>
+                              <p className="text-sm text-slate-500">Toggle site maintenance mode</p>
+                            </div>
+                            <Switch />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Quick Access</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <Button variant="outline" onClick={() => window.location.href = '/admin/dashboard'}>
+                                Admin Dashboard
+                              </Button>
+                              <Button variant="outline" onClick={() => window.location.href = '/admin/users'}>
+                                User Management
+                              </Button>
+                              <Button variant="outline" onClick={() => window.location.href = '/admin/frontend'}>
+                                Frontend Management
+                              </Button>
+                              <Button variant="outline" onClick={() => window.location.href = '/admin/education'}>
+                                Education Management
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           </main>
