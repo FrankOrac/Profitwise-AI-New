@@ -372,9 +372,9 @@ export default function SocialTradingPage() {
                           <div className="flex flex-col items-center">
                             <Avatar className="h-16 w-16 mb-4">
                               <AvatarFallback className="bg-primary-100 text-primary-700 text-xl">
-                                {trader.name.charAt(0)}
+                                {trader?.name?.charAt(0) || '?'}
                               </AvatarFallback>
-                              {trader.avatar && <AvatarImage src={trader.avatar} />}
+                              {trader?.avatar && <AvatarImage src={trader.avatar} />}
                             </Avatar>
                             <div className="text-center mb-2">
                               <div className="flex items-center justify-center gap-1">
