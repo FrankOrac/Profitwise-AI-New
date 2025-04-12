@@ -8,6 +8,20 @@ interface EducationCardProps {
 }
 
 export function EducationCard({ content }: EducationCardProps) {
+  const { mutate: updateProgress } = useMutation({
+    mutationFn: async (contentId: number) => {
+      const response = await fetch(`/api/education/${contentId}/progress`, {
+        method: 'POST'
+      });
+      if (!response.ok) throw new Error('Failed to update progress');
+      return response.json();
+    }
+  });
+
+  const handleStartContent = () => {
+    updateProgress(content.id);
+  };
+
   return (
     <Card className="overflow-hidden flex flex-col h-full">
       <AspectRatio ratio={16/9} className="bg-slate-200 relative">
@@ -28,9 +42,24 @@ export function EducationCard({ content }: EducationCardProps) {
           <PlayCircle className="h-4 w-4 mr-1.5" />
           <span>{content.difficulty} • {content.duration}</span>
         </div>
+      <div className="mt-4 flex items-center justify-between">
+          {content.progress && (
+            <div className="flex-1 mr-4">
+              <div className="h-2 bg-slate-200 rounded-full">
+                <div 
+                  className="h-2 bg-primary-600 rounded-full" 
+                  style={{ width: `${content.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+          <Button onClick={handleStartContent} size="sm">
+            {content.progress ? 'Continue' : 'Start'}
+          </Button>
+        </div>
       </div>
     </Card>
   );
 }
 
-export default EducationCard;
+export default EducationCard;d;

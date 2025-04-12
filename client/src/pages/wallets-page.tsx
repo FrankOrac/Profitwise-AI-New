@@ -23,6 +23,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { WalletCard } from "@/components/crypto/wallet-card"; // Added import
 
 const WalletsPage = () => {
   const defaultWallets = [
@@ -113,6 +114,8 @@ const WalletsPage = () => {
                 <TabsList>
                   <TabsTrigger value="wallets">Wallets</TabsTrigger>
                   <TabsTrigger value="transactions">Transactions</TabsTrigger>
+                  {/* Added placeholder for educational content tab */}
+                  <TabsTrigger value="education">Educational Content</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="wallets">
@@ -130,107 +133,7 @@ const WalletsPage = () => {
                         </CardContent>
                       </Card>
                     ) : wallets?.map((wallet: any) => (
-                      <Card key={wallet.id}>
-                        <CardHeader>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <CardTitle>{wallet?.name || 'Unknown Wallet'}</CardTitle>
-                              <CardDescription className="flex items-center mt-1">
-                                {wallet?.type ? `${wallet.type} Wallet` : 'Unknown Wallet'}
-                              </CardDescription>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => refetchWallets()}
-                            >
-                              <RefreshCw className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-500">Balance</span>
-                              <span className="font-bold">{wallet?.balance || '0'} {wallet?.type?.toUpperCase() || 'UNKNOWN'}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-500">Address</span>
-                              <div className="flex items-center">
-                                <span className="text-sm font-mono">
-                                  {wallet?.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : 'N/A'}
-                                </span>
-                                <button
-                                  onClick={() => {
-                                    if (wallet?.address) {
-                                      navigator.clipboard.writeText(wallet.address);
-                                      toast({ title: "Address copied" });
-                                    }
-                                  }}
-                                  className="ml-1 text-slate-400 hover:text-slate-700"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-between">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="outline">
-                                <ArrowUpRight className="h-4 w-4 mr-2" />
-                                Send
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Send {wallet?.type?.toUpperCase() || 'UNKNOWN'}</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                  <Label>Recipient Address</Label>
-                                  <Input
-                                    value={recipientAddress}
-                                    onChange={(e) => setRecipientAddress(e.target.value)}
-                                    placeholder="0x..."
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Amount</Label>
-                                  <Input
-                                    type="number"
-                                    value={sendAmount}
-                                    onChange={(e) => setSendAmount(e.target.value)}
-                                    placeholder="0.0"
-                                  />
-                                </div>
-                                <Button
-                                  className="w-full"
-                                  onClick={() => sendTransaction.mutate({
-                                    walletId: wallet.id,
-                                    to: recipientAddress,
-                                    value: sendAmount
-                                  })}
-                                  disabled={sendTransaction.isPending}
-                                >
-                                  {sendTransaction.isPending ? "Sending..." : "Send"}
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          <Button variant="outline" asChild>
-                            <a
-                              href={`https://etherscan.io/address/${wallet?.address}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Explorer
-                            </a>
-                          </Button>
-                        </CardFooter>
-                      </Card>
+                      <WalletCard key={wallet.id} wallet={wallet} refetchWallets={refetchWallets} sendTransaction={sendTransaction} />
                     ))}
                   </div>
                 </TabsContent>
@@ -283,6 +186,15 @@ const WalletsPage = () => {
                           </table>
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Placeholder for educational content tab content */}
+                <TabsContent value="education">
+                  <Card>
+                    <CardContent>
+                      <p>Educational content tracking will be implemented here.</p>
                     </CardContent>
                   </Card>
                 </TabsContent>
