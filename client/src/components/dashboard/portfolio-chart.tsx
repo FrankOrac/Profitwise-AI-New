@@ -73,11 +73,15 @@ export function PortfolioChart({ className }: PortfolioChartProps) {
           datasets: [{
             label: 'Portfolio Value',
             data: data.values,
-            borderColor: '#0050C8',
-            backgroundColor: 'rgba(0, 80, 200, 0.1)',
+            borderColor: '#F0B90B',
+            backgroundColor: 'rgba(240, 185, 11, 0.1)',
             borderWidth: 2,
             tension: 0.4,
-            fill: true
+            fill: true,
+            pointBackgroundColor: '#F0B90B',
+            pointBorderColor: '#FFFFFF',
+            pointHoverBackgroundColor: '#FFFFFF',
+            pointHoverBorderColor: '#F0B90B'
           }]
         },
         options: {

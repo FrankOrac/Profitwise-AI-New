@@ -17,10 +17,10 @@ export function AllocationChart({ className }: AllocationChartProps) {
   const [chartInstance, setChartInstance] = useState<any>(null);
   
   const assetAllocations: AssetAllocation[] = [
-    { name: "Stocks", percentage: 42, color: "#0050C8" },
-    { name: "Cryptocurrencies", percentage: 28, color: "#10B981" },
-    { name: "Bonds", percentage: 18, color: "#F59E0B" },
-    { name: "Cash", percentage: 12, color: "#94A3B8" }
+    { name: "Stocks", percentage: 42, color: "#F0B90B" },
+    { name: "Cryptocurrencies", percentage: 28, color: "#E6007A" },
+    { name: "Bonds", percentage: 18, color: "#00FFA3" },
+    { name: "Cash", percentage: 12, color: "#627EEA" }
   ];
 
   useEffect(() => {
