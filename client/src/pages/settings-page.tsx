@@ -183,40 +183,44 @@ export default function SettingsPage() {
                 </TabsContent>
                 {user?.role === 'admin' && (
                   <TabsContent value="admin">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Admin Settings</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label>Maintenance Mode</Label>
-                              <p className="text-sm text-slate-500">Toggle site maintenance mode</p>
+                    <div className="space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Admin Controls</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                <Label>Maintenance Mode</Label>
+                                <p className="text-sm text-slate-500">Toggle site maintenance mode</p>
+                              </div>
+                              <Switch />
                             </div>
-                            <Switch />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label>Quick Access</Label>
-                            <div className="grid grid-cols-2 gap-4">
-                              <Button variant="outline" onClick={() => window.location.href = '/admin/dashboard'}>
-                                Admin Dashboard
-                              </Button>
-                              <Button variant="outline" onClick={() => window.location.href = '/admin/users'}>
-                                User Management
-                              </Button>
-                              <Button variant="outline" onClick={() => window.location.href = '/admin/frontend'}>
-                                Frontend Management
-                              </Button>
-                              <Button variant="outline" onClick={() => window.location.href = '/admin/education'}>
-                                Education Management
-                              </Button>
+                            
+                            <div className="space-y-2">
+                              <Label>Quick Access</Label>
+                              <div className="grid grid-cols-2 gap-4">
+                                <Button variant="outline" onClick={() => window.location.href = '/admin/dashboard'}>
+                                  Admin Dashboard
+                                </Button>
+                                <Button variant="outline" onClick={() => window.location.href = '/admin/users'}>
+                                  User Management
+                                </Button>
+                                <Button variant="outline" onClick={() => window.location.href = '/admin/frontend'}>
+                                  Frontend Management
+                                </Button>
+                                <Button variant="outline" onClick={() => window.location.href = '/admin/education'}>
+                                  Education Management
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                      
+                      <APISettings />
+                    </div>
                   </TabsContent>
                 )}
               </Tabs>

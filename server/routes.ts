@@ -541,6 +541,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch activity logs" });
     }
   });
+
+  // API Settings Routes
+  app.get("/api/admin/settings/api-keys", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const apiKeys = await storage.getAPIKeys();
+      res.json(apiKeys);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch API keys" });
+    }
+  });
+
+  app.post("/api/admin/settings/api-keys", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const updatedKeys = await storage.updateAPIKeys(req.body);
+      res.json(updatedKeys);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update API keys" });
+    }
+  });
   
   // Social Trading Routes
   app.post("/api/social/post", async (req, res) => {
