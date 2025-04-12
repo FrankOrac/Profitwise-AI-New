@@ -1,4 +1,5 @@
 import { MobileSidebar } from "@/components/ui/mobile-sidebar";
+import Header from "@/components/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
