@@ -160,16 +160,18 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!revenueChartRef.current) return;
-    if (revenueChartInstance) {
-      revenueChartInstance.destroy();
-    }
+    
+    const setupChart = async () => {
+      if (revenueChartInstance) {
+        revenueChartInstance.destroy();
+      }
 
-    const ctx = revenueChartRef.current.getContext('2d');
-    if (!ctx) return;
+      const ctx = revenueChartRef.current.getContext('2d');
+      if (!ctx) return;
 
-    import('chart.js').then(({ Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip }) => {
+      const { Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip } = await import('chart.js');
       Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip);
-
+      
       const newChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -213,7 +215,9 @@ export default function AdminDashboard() {
       });
 
       setRevenueChartInstance(newChartInstance);
-    });
+    };
+
+    setupChart();
 
     return () => {
       if (revenueChartInstance) {
