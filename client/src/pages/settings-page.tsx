@@ -198,7 +198,7 @@ export default function SettingsPage() {
                               </div>
                               <Switch />
                             </div>
-                            
+
                             <div className="space-y-2">
                               <Label>Quick Access</Label>
                               <div className="grid grid-cols-2 gap-4">
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                           </div>
                         </CardContent>
                       </Card>
-                      
+
                       <APISettings />
                     </div>
                   </TabsContent>
