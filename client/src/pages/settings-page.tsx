@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -53,10 +55,11 @@ export default function SettingsPage() {
               <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
               <Tabs defaultValue="notifications">
-                <TabsList className="grid w-full grid-cols-5 mb-6">
+                <TabsList className="grid w-full grid-cols-6 mb-6">
                   <TabsTrigger value="notifications">Notifications</TabsTrigger>
                   <TabsTrigger value="security">Security</TabsTrigger>
                   <TabsTrigger value="preferences">Preferences</TabsTrigger>
+                  <TabsTrigger value="email">Email</TabsTrigger>
                   <TabsTrigger value="api">API Access</TabsTrigger>
                   {user?.role === 'admin' && <TabsTrigger value="admin">Admin</TabsTrigger>}
                 </TabsList>
@@ -176,6 +179,102 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
                 </TabsContent>
+                <TabsContent value="email">
+                  <div className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>SMTP Configuration</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="smtp-host">SMTP Host</Label>
+                            <Input id="smtp-host" placeholder="smtp.gmail.com" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="smtp-port">SMTP Port</Label>
+                            <Input id="smtp-port" placeholder="587" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="smtp-user">SMTP Username</Label>
+                            <Input id="smtp-user" type="email" placeholder="your@email.com" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="smtp-pass">SMTP Password</Label>
+                            <Input id="smtp-pass" type="password" />
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch id="smtp-secure" />
+                          <Label htmlFor="smtp-secure">Use SSL/TLS</Label>
+                        </div>
+                        <Button>Save SMTP Settings</Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Email Templates</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Template Type</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select template" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="welcome">Welcome Email</SelectItem>
+                              <SelectItem value="password-reset">Password Reset</SelectItem>
+                              <SelectItem value="portfolio-update">Portfolio Update</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Subject Template</Label>
+                          <Input placeholder="Enter email subject template" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>HTML Template</Label>
+                          <Textarea className="min-h-[200px] font-mono" placeholder="Enter HTML template with EJS syntax" />
+                        </div>
+                        <div className="flex justify-between">
+                          <Button variant="outline">Preview</Button>
+                          <Button>Save Template</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Test Email</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>To Address</Label>
+                          <Input type="email" placeholder="recipient@example.com" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Template</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select template to test" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="welcome">Welcome Email</SelectItem>
+                              <SelectItem value="password-reset">Password Reset</SelectItem>
+                              <SelectItem value="portfolio-update">Portfolio Update</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button>Send Test Email</Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+
                 <TabsContent value="api">
                   <Card>
                     <CardHeader>
