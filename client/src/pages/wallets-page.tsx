@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { MobileSidebar } from "@/components/ui/mobile-sidebar";
+import Sidebar from "@/components/ui/sidebar";
 import Header from "@/components/header";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +38,7 @@ const WalletsPage = () => {
   const [showConnectForm, setShowConnectForm] = useState(false);
   const [sendAmount, setSendAmount] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
+  const isMobile = useIsMobile();
 
   const { data: wallets = defaultWallets, isLoading: walletsLoading, refetch: refetchWallets } = useQuery({
     queryKey: ["/api/web3/wallets"],
@@ -93,7 +96,7 @@ const WalletsPage = () => {
         <title>Web3 Wallets | ProfitWise AI</title>
       </Helmet>
       <div className="flex h-screen bg-slate-50">
-        <MobileSidebar />
+        {isMobile ? <MobileSidebar /> : <Sidebar />}
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-y-auto p-4 md:p-6">

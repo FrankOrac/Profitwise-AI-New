@@ -28,12 +28,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from 'react';
+import Sidebar from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function SocialTradingPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAction, setSelectedAction] = useState("all");
+  const isMobile = useIsMobile();
 
   const { data: tradePosts, isLoading: isLoadingPosts } = useQuery({
     queryKey: ["/api/social/feed"],
@@ -109,7 +112,7 @@ export default function SocialTradingPage() {
         <title>Social Trading | ProfitWise AI</title>
       </Helmet>
       <div className="flex h-screen bg-slate-50">
-        <MobileSidebar />
+        {isMobile ? <MobileSidebar /> : <Sidebar />}
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
