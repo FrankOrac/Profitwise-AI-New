@@ -62,4 +62,4 @@ export function EducationCard({ content }: EducationCardProps) {
   );
 }
 
-export default EducationCard;d;
+export default EducationCard;
