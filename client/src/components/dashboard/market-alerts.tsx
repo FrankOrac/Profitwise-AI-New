@@ -1,4 +1,8 @@
-
+import { Helmet } from "react-helmet";
+import Sidebar from "@/components/ui/sidebar";
+import Header from "@/components/header";
+import MobileSidebar from "@/components/ui/mobile-sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +19,8 @@ interface Alert {
   active: boolean;
 }
 
-export function MarketAlerts() {
+export default function MarketAlerts() {
+  const isMobile = useIsMobile();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [newAlert, setNewAlert] = useState({
     symbol: "",
@@ -34,85 +39,101 @@ export function MarketAlerts() {
   };
 
   const toggleAlert = (id: number) => {
-    setAlerts(alerts.map(alert => 
+    setAlerts(alerts.map(alert =>
       alert.id === id ? { ...alert, active: !alert.active } : alert
     ));
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Bell className="h-5 w-5 mr-2" />
-          Market Alerts
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex space-x-2">
-            <Input
-              placeholder="Symbol"
-              value={newAlert.symbol}
-              onChange={(e) => setNewAlert({ ...newAlert, symbol: e.target.value })}
-            />
-            <Select
-              value={newAlert.condition}
-              onValueChange={(value) => setNewAlert({ ...newAlert, condition: value as "above" | "below" })}
-            >
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="above">Above</SelectItem>
-                <SelectItem value="below">Below</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              type="number"
-              placeholder="Price"
-              value={newAlert.price}
-              onChange={(e) => setNewAlert({ ...newAlert, price: e.target.value })}
-            />
-            <Button onClick={addAlert}>Add Alert</Button>
-          </div>
+    <>
+      <Helmet>
+        <title>Market Alerts | ProfitWise AI</title>
+      </Helmet>
+      <div className="flex h-screen bg-slate-50">
+        {!isMobile && <Sidebar />}
+        <MobileSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-2xl font-bold mb-6">Market Alerts</h1>
+              <p>Configure and manage your market alerts here.</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Bell className="h-5 w-5 mr-2" />
+                    Market Alerts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Symbol"
+                        value={newAlert.symbol}
+                        onChange={(e) => setNewAlert({ ...newAlert, symbol: e.target.value })}
+                      />
+                      <Select
+                        value={newAlert.condition}
+                        onValueChange={(value) => setNewAlert({ ...newAlert, condition: value as "above" | "below" })}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="above">Above</SelectItem>
+                          <SelectItem value="below">Below</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        placeholder="Price"
+                        value={newAlert.price}
+                        onChange={(e) => setNewAlert({ ...newAlert, price: e.target.value })}
+                      />
+                      <Button onClick={addAlert}>Add Alert</Button>
+                    </div>
 
-          <div className="space-y-2">
-            {alerts.map((alert) => (
-              <div
-                key={alert.id}
-                className={`p-3 rounded-lg border flex items-center justify-between ${
-                  alert.active ? "bg-slate-50" : "bg-slate-100"
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-warning" />
-                  <span className="font-medium">{alert.symbol}</span>
-                  {alert.condition === "above" ? (
-                    <ArrowUpRight className="h-4 w-4 text-success" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4 text-error" />
-                  )}
-                  <span>${alert.price}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={alert.active ? "success" : "secondary"}>
-                    {alert.active ? "Active" : "Inactive"}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleAlert(alert.id)}
-                  >
-                    {alert.active ? "Disable" : "Enable"}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                    <div className="space-y-2">
+                      {alerts.map((alert) => (
+                        <div
+                          key={alert.id}
+                          className={`p-3 rounded-lg border flex items-center justify-between ${
+                            alert.active ? "bg-slate-50" : "bg-slate-100"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <AlertTriangle className="h-4 w-4 text-warning" />
+                            <span className="font-medium">{alert.symbol}</span>
+                            {alert.condition === "above" ? (
+                              <ArrowUpRight className="h-4 w-4 text-success" />
+                            ) : (
+                              <ArrowDownRight className="h-4 w-4 text-error" />
+                            )}
+                            <span>${alert.price}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={alert.active ? "success" : "secondary"}>
+                              {alert.active ? "Active" : "Inactive"}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleAlert(alert.id)}
+                            >
+                              {alert.active ? "Disable" : "Enable"}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
 }
-
-export default MarketAlerts;
