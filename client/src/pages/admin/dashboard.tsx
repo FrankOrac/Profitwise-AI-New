@@ -17,9 +17,10 @@ import {
   ArrowRight,
   Loader2,
   Activity,
+  RefreshCw,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import Chart from "@/lib/chart-setup";
+import { Chart } from "chart.js/auto";
 
 interface MetricCardProps {
   title: string;

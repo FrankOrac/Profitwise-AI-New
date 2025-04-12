@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Helmet } from "react-helmet";
 import Sidebar from "@/components/ui/sidebar";
 import Header from "@/components/header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Search, SlidersHorizontal, ArrowUpDown, Trash2 } from "lucide-react";
+import { Loader2, Plus, Search, SlidersHorizontal, ArrowUpDown, Trash2, RefreshCw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -41,6 +41,27 @@ const TradeJournal = () => {
         <p>This is a placeholder for the trade journaling feature.</p>
       </CardContent>
     </Card>
+  );
+};
+
+// Placeholder for MarketAlerts component
+const MarketAlerts = () => {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <h2 className="text-lg font-bold mb-4">Market Alerts</h2>
+        <p>This is a placeholder for market alerts.</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Placeholder for PortfolioRebalance component
+const PortfolioRebalance = () => {
+  return (
+    <div>
+      <p>This is a placeholder for portfolio rebalancing functionality.</p>
+    </div>
   );
 };
 
@@ -219,6 +240,23 @@ export default function PortfolioPage() {
                   <AllocationChart />
                 </div>
 
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  <TradeJournal />
+                  <MarketAlerts />
+                </div>
+
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <RefreshCw className="h-5 w-5 mr-2" />
+                      Portfolio Rebalancing
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PortfolioRebalance />
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex justify-between items-center mb-6">
@@ -313,14 +351,6 @@ export default function PortfolioPage() {
                     </div>
                   </CardContent>
                 </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <TradeJournal />
-        <MarketAlerts />
-      </div>
-      <div className="mt-6">
-        <PortfolioRebalance />
-      </div>
               </TabsContent>
 
               {/* Assets Tab */}

@@ -43,14 +43,15 @@ export default function SettingsPage() {
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-2xl font-bold mb-6">Settings</h1>
-              
+
               <Tabs defaultValue="notifications">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsList className="grid w-full grid-cols-4 mb-6">
                   <TabsTrigger value="notifications">Notifications</TabsTrigger>
                   <TabsTrigger value="security">Security</TabsTrigger>
                   <TabsTrigger value="preferences">Preferences</TabsTrigger>
+                  <TabsTrigger value="api">API Access</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="notifications">
                   <Card>
                     <CardHeader>
@@ -67,7 +68,7 @@ export default function SettingsPage() {
                           onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, email: checked})}
                         />
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Portfolio Alerts</Label>
@@ -78,7 +79,7 @@ export default function SettingsPage() {
                           onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, portfolio: checked})}
                         />
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Security Notifications</Label>
@@ -89,7 +90,7 @@ export default function SettingsPage() {
                           onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, security: checked})}
                         />
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Marketing Updates</Label>
@@ -100,14 +101,14 @@ export default function SettingsPage() {
                           onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, marketing: checked})}
                         />
                       </div>
-                      
+
                       <div className="flex justify-end mt-6">
                         <Button onClick={handleSaveNotifications}>Save Preferences</Button>
                       </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 <TabsContent value="security">
                   <Card>
                     <CardHeader>
@@ -137,7 +138,7 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 <TabsContent value="preferences">
                   <Card>
                     <CardHeader>
@@ -151,7 +152,7 @@ export default function SettingsPage() {
                         </div>
                         <Switch />
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Auto-refresh Data</Label>
@@ -159,10 +160,21 @@ export default function SettingsPage() {
                         </div>
                         <Switch defaultChecked />
                       </div>
-                      
+
                       <div className="flex justify-end mt-6">
                         <Button>Save Preferences</Button>
                       </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="api">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>API Access</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Add API settings here */}
+                      <p>API settings will go here</p>
                     </CardContent>
                   </Card>
                 </TabsContent>
