@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayCircle } from "lucide-react";
 import { EducationalContent } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
