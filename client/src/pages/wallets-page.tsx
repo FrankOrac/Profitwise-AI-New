@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { WalletCard } from "@/components/crypto/wallet-card";
 import { PriceChart } from "@/components/crypto/price-chart";
 import { TokenSwap } from "@/components/crypto/token-swap";
+import { TransactionHistory } from "@/components/crypto/transaction-history";
 
 const WalletsPage = () => {
   const defaultWallets = [
@@ -194,10 +195,6 @@ const WalletsPage = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </TabsContent>
-
-                <TabsContent value="transactions">
-                  <TransactionHistory />
                 </TabsContent>
               </Tabs>
             </div>
