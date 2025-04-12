@@ -224,6 +224,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/portfolio/rebalance", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const userId = req.user!.id;
+      const { assets } = req.body;
+
+      // Calculate required trades
+      const trades = assets.map(asset => {
+        const diffPercentage = asset.targetAllocation - asset.currentAllocation;
+        const tradeValue = (diffPercentage / 100) * asset.value;
+        return {
+          symbol: asset.symbol,
+          action: diffPercentage > 0 ? 'buy' : 'sell',
+          amount: Math.abs(tradeValue)
+        };
+      });
+
+      // Execute trades
+      for (const trade of trades) {
+        await storage.executeTrade({
+          userId,
+          symbol: trade.symbol,
+          action: trade.action,
+          amount: trade.amount,
+          timestamp: new Date()
+        });
+      }
+
+      res.json({ message: "Portfolio rebalanced successfully", trades });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to rebalance portfolio" });
+    }
+  });
+
   // API routes for AI insights
   app.get("/api/insights", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
