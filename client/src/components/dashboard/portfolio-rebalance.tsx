@@ -11,7 +11,7 @@ interface Asset {
   value: number;
 }
 
-export function PortfolioRebalance() {
+export default function PortfolioRebalance() {
   const [isRebalancing, setIsRebalancing] = useState(false);
 
   const { data: portfolio } = useQuery<Asset[]>({
