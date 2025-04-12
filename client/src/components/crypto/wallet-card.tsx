@@ -27,6 +27,12 @@ export function WalletCard() {
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedToken, setSelectedToken] = useState("ETH");
+  const availableTokens = [
+    { symbol: "ETH", name: "Ethereum" },
+    { symbol: "USDC", name: "USD Coin" },
+    { symbol: "WBTC", name: "Wrapped Bitcoin" },
+    { symbol: "DAI", name: "Dai Stablecoin" }
+  ];
 
   const { data: wallet, isLoading, refetch } = useQuery<WalletData>({
     queryKey: ["/api/web3/wallets"],
@@ -117,6 +123,23 @@ export function WalletCard() {
           </div>
 
           <div className="flex gap-2 mt-6">
+            <div className="mb-4">
+              <Select value={selectedToken} onValueChange={setSelectedToken}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select token" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTokens.map(token => (
+                    <SelectItem key={token.symbol} value={token.symbol}>
+                      <div className="flex items-center">
+                        <span className="mr-2">{token.symbol}</span>
+                        <span className="text-slate-500 text-sm">{token.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Dialog open={showSendForm} onOpenChange={setShowSendForm}>
               <DialogTrigger asChild>
                 <Button className="flex-1">
