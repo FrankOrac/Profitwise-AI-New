@@ -1,4 +1,3 @@
-import { MobileSidebar } from "@/components/ui/mobile-sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -10,10 +9,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Helmet } from "react-helmet-async";
 import { APISettings } from "@/components/admin/api-settings";
+import { MobileSidebar } from "@/components/ui/mobile-sidebar";
+import Sidebar from "@/components/ui/sidebar";
+import Header from "@/components/header";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [notificationSettings, setNotificationSettings] = useState({
     email: true,
     portfolio: true,
@@ -41,8 +45,9 @@ export default function SettingsPage() {
         <title>Settings | ProfitWise AI</title>
       </Helmet>
       <div className="flex h-screen bg-slate-50">
-        <MobileSidebar />
+        {isMobile ? <MobileSidebar /> : <Sidebar />}
         <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-2xl font-bold mb-6">Settings</h1>
