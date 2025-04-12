@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as schema from "@shared/schema";
 
 // Make sure we have a DATABASE_URL
@@ -16,3 +17,23 @@ export const pool = new Pool({
 
 // Create a Drizzle ORM instance
 export const db = drizzle(pool, { schema });
+
+// Run migrations
+export async function runMigrations() {
+  try {
+    await migrate(db, { migrationsFolder: './migrations' });
+    console.log('Migrations completed successfully');
+  } catch (error) {
+    console.error('Error running migrations:', error);
+    throw error;
+  }
+}
+
+// Initialize database
+export async function initializeDatabase() {
+  await runMigrations();
+  if (process.env.NODE_ENV === 'development') {
+    // Run seeder in development
+    await import('./seed');
+  }
+}
