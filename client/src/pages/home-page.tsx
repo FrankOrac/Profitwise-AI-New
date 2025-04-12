@@ -14,15 +14,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { EducationalContent } from "@shared/schema";
-import MobileSidebar from "@/components/ui/mobile-sidebar"; // Added import
-import { useIsMobile } from "@/hooks/use-mobile"; // Fixed import name
-import { useLocation } from "wouter"; // Added import
+import MobileSidebar from "@/components/ui/mobile-sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useLocation } from "wouter";
 
 
 export default function HomePage() {
   const [location] = useLocation();
   const { user } = useAuth();
-  const isMobile = useIsMobile(); // Fixed hook name
+  const isMobile = useIsMobile();
 
   const { data: educationContent = [], isError: educationError } = useQuery<EducationalContent[]>({
     queryKey: ["/api/education"],
@@ -41,9 +41,9 @@ export default function HomePage() {
         <title>Dashboard | ProfitWise AI</title>
       </Helmet>
 
-      <div className="flex h-screen bg-slate-50 dark:bg-slate-900"> {/* Changed to flex */}
-        {!isMobile && <Sidebar />} {/* Conditionally render Sidebar */}
-        <MobileSidebar /> {/* Added MobileSidebar */}
+      <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+        {!isMobile && <Sidebar />}
+        <MobileSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
 
@@ -55,7 +55,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            
+
 
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
