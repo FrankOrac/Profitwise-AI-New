@@ -120,9 +120,9 @@ export default function WalletsPage() {
                         <CardHeader>
                           <div className="flex justify-between items-start">
                             <div>
-                              <CardTitle>{wallet?.name || `${wallet?.type || 'Unknown'} Wallet`}</CardTitle>
+                              <CardTitle>{wallet?.name || 'Unknown Wallet'}</CardTitle>
                               <CardDescription className="flex items-center mt-1">
-                                {wallet?.type ? `${String(wallet.type).charAt(0).toUpperCase()}${String(wallet.type).slice(1)} Wallet` : 'Unknown Wallet'}
+                                {wallet?.type ? `${wallet.type} Wallet` : 'Unknown Wallet'}
                               </CardDescription>
                             </div>
                             <Button

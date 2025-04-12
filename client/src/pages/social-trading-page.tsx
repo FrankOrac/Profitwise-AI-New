@@ -365,8 +365,8 @@ export default function SocialTradingPage() {
 
                 <TabsContent value="traders">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {traders?.map((trader) => (
-                      <Card key={trader.id}>
+                    {traders?.map((trader, index) => (
+                      <Card key={index}>
                         <CardContent className="p-6">
                           <div className="flex flex-col items-center">
                             <Avatar className="h-16 w-16 mb-4">
@@ -377,28 +377,28 @@ export default function SocialTradingPage() {
                             </Avatar>
                             <div className="text-center mb-2">
                               <div className="flex items-center justify-center gap-1">
-                                <h3 className="font-bold text-lg">{trader.name}</h3>
+                                <h3 className="font-bold text-lg">{trader?.name || 'Unknown Trader'}</h3>
                                 {trader.verified && (
                                   <svg className="h-4 w-4 text-blue-500 fill-current" viewBox="0 0 24 24">
                                     <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.5 14.5l-4-4 1.5-1.5 2.5 2.5 6-6 1.5 1.5-7.5 7.5z" />
                                   </svg>
                                 )}
                               </div>
-                              <p className="text-slate-500 text-sm">@{trader.username}</p>
+                              <p className="text-slate-500 text-sm">@{trader?.username || 'Unknown'}</p>
                             </div>
-                            <p className="text-center text-sm mb-4">{trader.biography}</p>
+                            <p className="text-center text-sm mb-4">{trader?.biography || 'No biography provided'}</p>
                             <div className="grid grid-cols-3 w-full gap-2 mb-4">
                               <div className="text-center p-2 bg-slate-50 rounded-md">
                                 <div className="text-xs text-slate-500">Performance</div>
-                                <div className="font-bold text-green-600">{trader.performance}</div>
+                                <div className="font-bold text-green-600">{trader?.performance || 0}</div>
                               </div>
                               <div className="text-center p-2 bg-slate-50 rounded-md">
                                 <div className="text-xs text-slate-500">Win Rate</div>
-                                <div className="font-bold">{trader.winRate}</div>
+                                <div className="font-bold">{trader?.winRate || 0}</div>
                               </div>
                               <div className="text-center p-2 bg-slate-50 rounded-md">
                                 <div className="text-xs text-slate-500">Followers</div>
-                                <div className="font-bold">{trader.followers.toLocaleString()}</div>
+                                <div className="font-bold">{trader?.followers?.toLocaleString() || 0}</div>
                               </div>
                             </div>
                             <div className="flex gap-2 w-full">
