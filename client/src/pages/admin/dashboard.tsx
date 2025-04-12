@@ -16,6 +16,7 @@ import {
   Calendar,
   ArrowRight,
   Loader2,
+  Activity,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
