@@ -32,12 +32,25 @@ interface Asset {
   color: string;
 }
 
+// Placeholder for TradeJournal component
+const TradeJournal = () => {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <h2 className="text-lg font-bold mb-4">Trade Journal</h2>
+        <p>This is a placeholder for the trade journaling feature.</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+
 export default function PortfolioPage() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [isAddAssetDialogOpen, setIsAddAssetDialogOpen] = useState(false);
-  
+
   // Sample portfolio assets
   const assets: Asset[] = [
     {
@@ -129,7 +142,7 @@ export default function PortfolioPage() {
       color: "#94A3B8",
     },
   ];
-  
+
   const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -138,25 +151,25 @@ export default function PortfolioPage() {
       setSortDirection("asc");
     }
   };
-  
+
   const sortedAssets = [...assets].sort((a, b) => {
     if (!sortField) return 0;
-    
+
     let compareA: string | number = a[sortField as keyof Asset];
     let compareB: string | number = b[sortField as keyof Asset];
-    
+
     // If the values are prices or values, strip the currency symbol and convert to number
     if (typeof compareA === "string" && compareA.startsWith("$")) {
       compareA = parseFloat(compareA.replace("$", "").replace(",", ""));
       compareB = parseFloat((compareB as string).replace("$", "").replace(",", ""));
     }
-    
+
     // If the values are percentages, strip the % symbol and convert to number
     if (typeof compareA === "string" && compareA.endsWith("%")) {
       compareA = parseFloat(compareA.replace("%", ""));
       compareB = parseFloat((compareB as string).replace("%", ""));
     }
-    
+
     if (compareA < compareB) {
       return sortDirection === "asc" ? -1 : 1;
     }
@@ -165,21 +178,21 @@ export default function PortfolioPage() {
     }
     return 0;
   });
-  
+
   return (
     <>
       <Helmet>
         <title>Portfolio | ProfitWise AI</title>
       </Helmet>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] min-h-screen">
         <div className="hidden md:block">
           <Sidebar />
         </div>
-        
+
         <div className="flex flex-col">
           <Header />
-          
+
           <main className="bg-slate-50 p-6 flex-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <div>
@@ -191,21 +204,21 @@ export default function PortfolioPage() {
                 Add Asset
               </Button>
             </div>
-            
+
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="mb-8">
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="assets">Assets</TabsTrigger>
                 <TabsTrigger value="performance">Performance</TabsTrigger>
               </TabsList>
-              
+
               {/* Overview Tab */}
               <TabsContent value="overview" className="mt-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                   <PortfolioChart className="lg:col-span-2" />
                   <AllocationChart />
                 </div>
-                
+
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex justify-between items-center mb-6">
@@ -221,7 +234,7 @@ export default function PortfolioPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
@@ -300,8 +313,12 @@ export default function PortfolioPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+      <div className="mt-6">
+        <TradeJournal />
+      </div>
               </TabsContent>
-              
+
               {/* Assets Tab */}
               <TabsContent value="assets" className="mt-6">
                 <Card>
@@ -311,7 +328,7 @@ export default function PortfolioPage() {
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               {/* Performance Tab */}
               <TabsContent value="performance" className="mt-6">
                 <Card>
@@ -325,7 +342,7 @@ export default function PortfolioPage() {
           </main>
         </div>
       </div>
-      
+
       {/* Add Asset Dialog */}
       <Dialog open={isAddAssetDialogOpen} onOpenChange={setIsAddAssetDialogOpen}>
         <DialogContent>
