@@ -158,7 +158,7 @@ export default function WalletsPage() {
                           <div className="space-y-4">
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-slate-500">Balance</span>
-                              <span className="font-bold">{wallet.balance} {wallet.type.toUpperCase()}</span>
+                              <span className="font-bold">{wallet?.balance || '0'} {wallet?.type?.toUpperCase() || 'UNKNOWN'}</span>
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-slate-500">Address</span>
@@ -187,7 +187,7 @@ export default function WalletsPage() {
                             </DialogTrigger>
                             <DialogContent>
                               <DialogHeader>
-                                <DialogTitle>Send {wallet.type.toUpperCase()}</DialogTitle>
+                                <DialogTitle>Send {wallet?.type?.toUpperCase() || 'UNKNOWN'}</DialogTitle>
                               </DialogHeader>
                               <div className="space-y-4 py-4">
                                 <div className="space-y-2">
