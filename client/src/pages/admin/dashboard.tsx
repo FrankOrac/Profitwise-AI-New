@@ -62,7 +62,7 @@ export default function AdminDashboard() {
     refetchInterval: 30000,
   });
 
-  const { data: activityLogs } = useQuery({
+  const { data: activityLogs = [] } = useQuery({
     queryKey: ["/api/admin/activity-logs"],
     refetchInterval: 15000,
   });
@@ -371,6 +371,15 @@ export default function AdminDashboard() {
     { id: 3, user: "sarah.smith", action: "Generated new AI insight", time: "yesterday" },
     { id: 4, user: "michael.brown", action: "Added 3 assets to portfolio", time: "yesterday" },
     { id: 5, user: "emma.wilson", action: "Registered new account", time: "2 days ago" },
+  ];
+
+  const revenueData = [
+    { month: 'Jan', revenue: 1200 },
+    { month: 'Feb', revenue: 1900 },
+    { month: 'Mar', revenue: 2300 },
+    { month: 'Apr', revenue: 2800 },
+    { month: 'May', revenue: 3200 },
+    { month: 'Jun', revenue: 4000 },
   ];
 
   return (
