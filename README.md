@@ -6,11 +6,14 @@ A modern web application for AI-powered trading insights and portfolio managemen
 ## Features
 
 - 📊 Real-time portfolio tracking and analytics
-- 🤖 AI-powered trading insights
-- 👥 Social trading capabilities
-- 💰 Multi-wallet management
-- 📚 Educational resources and tutorials
+- 🤖 AI-powered trading insights and recommendations
+- 👥 Social trading with trader following
+- 💰 Multi-wallet management system
+- 📚 Educational resources and webinars
+- 📧 Email notifications and alerts
 - 🔒 Secure authentication system
+- ⚙️ Advanced admin controls
+- 📱 Responsive design
 
 ## Tech Stack
 
@@ -18,9 +21,10 @@ A modern web application for AI-powered trading insights and portfolio managemen
 - **Backend**: Express.js
 - **Database**: PostgreSQL with Drizzle ORM
 - **Styling**: Tailwind CSS + shadcn/ui
-- **State Management**: React Query
-- **Authentication**: Passport.js
-- **Routing**: Wouter
+- **State Management**: React Query + Context
+- **Authentication**: Custom auth with sessions
+- **Email**: EJS templates
+- **Charts**: Chart.js
 
 ## Getting Started
 
@@ -28,6 +32,7 @@ A modern web application for AI-powered trading insights and portfolio managemen
 2. Install dependencies:
 ```bash
 npm install
+cd client && npm install
 ```
 
 3. Start the development server:

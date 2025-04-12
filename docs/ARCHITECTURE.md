@@ -20,6 +20,13 @@ ProfitWise AI is built using a modern full-stack architecture with TypeScript th
 - React Context for authentication state
 - Local state with useState where appropriate
 
+### UI Components
+
+- Shadcn/ui component library
+- Tailwind CSS for styling
+- Chart.js for data visualization
+- Responsive design system
+
 ## Backend Architecture
 
 ### Server Structure
@@ -28,10 +35,22 @@ ProfitWise AI is built using a modern full-stack architecture with TypeScript th
 - **auth.ts**: Authentication logic
 - **db.ts**: Database connection and queries
 - **storage.ts**: File storage utilities
+- **email.ts**: Email service integration
 
 ### Database
 
-PostgreSQL with Drizzle ORM for type-safe queries and migrations.
+PostgreSQL with Drizzle ORM for:
+- Type-safe queries
+- Migrations
+- Schema management
+- Relationship handling
+
+### Email System
+
+- EJS templates for emails
+- SMTP configuration
+- Template management
+- Bulk sending capabilities
 
 ## Security
 
@@ -39,10 +58,21 @@ PostgreSQL with Drizzle ORM for type-safe queries and migrations.
 - CSRF protection
 - Secure password hashing
 - Input validation with Zod
+- Rate limiting
+- Security headers
 
 ## Performance
 
-- Vite for fast development and optimized builds
+- Vite for fast development
 - Code splitting by route
 - Lazy loading of components
-- Efficient database queries with proper indexing
+- Efficient database queries
+- Optimized asset delivery
+- Caching strategies
+
+## Deployment
+
+- Production-ready setup
+- Environment configuration
+- Build optimization
+- Performance monitoring
