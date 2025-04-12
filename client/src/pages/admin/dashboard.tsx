@@ -159,20 +159,25 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!revenueChartRef.current) return;
+    let chartInstance: any = null;
     
     const setupChart = async () => {
-      if (revenueChartInstance) {
-        revenueChartInstance.destroy();
-      }
-
-      const ctx = revenueChartRef.current.getContext('2d');
+      const canvas = revenueChartRef.current;
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
       if (!ctx) return;
+
+      // Clean up any existing chart on the canvas
+      const existingChart = Chart.getChart(canvas);
+      if (existingChart) {
+        existingChart.destroy();
+      }
 
       const { Chart, LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip } = await import('chart.js');
       Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip);
       
-      const newChartInstance = new Chart(ctx, {
+      chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: revenueData.map(d => d.month),
@@ -213,15 +218,20 @@ export default function AdminDashboard() {
           }
         }
       });
-
-      setRevenueChartInstance(newChartInstance);
     };
 
     setupChart();
 
     return () => {
-      if (revenueChartInstance) {
-        revenueChartInstance.destroy();
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+      const canvas = revenueChartRef.current;
+      if (canvas) {
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) {
+          existingChart.destroy();
+        }
       }
     };
   }, [revenueData]);
