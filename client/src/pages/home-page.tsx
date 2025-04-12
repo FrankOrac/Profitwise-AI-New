@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet";
 import Sidebar from "@/components/ui/sidebar";
 import Header from "@/components/header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MetricCard from "@/components/dashboard/metric-card";
 import PortfolioChart from "@/components/dashboard/portfolio-chart";
 import AllocationChart from "@/components/dashboard/allocation-chart";
