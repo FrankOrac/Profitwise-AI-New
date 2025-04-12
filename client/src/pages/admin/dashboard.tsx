@@ -102,7 +102,7 @@ export default function AdminDashboard() {
     blocked: "bg-red-100 text-red-800"
   };
 
-  const revenueData = [
+  const defaultRevenueData = [
     { month: 'Jan', revenue: 1200 },
     { month: 'Feb', revenue: 1900 },
     { month: 'Mar', revenue: 2300 },
@@ -193,10 +193,10 @@ export default function AdminDashboard() {
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: revenueData.map(d => d.month),
+          labels: (revenueData?.data || defaultRevenueData).map(d => d.month),
           datasets: [{
             label: 'Monthly Revenue',
-            data: revenueData.map(d => d.revenue),
+            data: (revenueData?.data || defaultRevenueData).map(d => d.revenue),
             borderColor: '#10B981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             tension: 0.4,
