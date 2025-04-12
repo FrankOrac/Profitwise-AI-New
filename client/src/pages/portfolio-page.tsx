@@ -35,13 +35,6 @@ interface Asset {
 import TradeJournal from "@/components/dashboard/trade-journal";
 import MarketAlerts from "@/components/dashboard/market-alerts";
 import PortfolioRebalance from "@/components/dashboard/portfolio-rebalance";
-const PortfolioRebalance = () => {
-  return (
-    <div>
-      <p>This is a placeholder for portfolio rebalancing functionality.</p>
-    </div>
-  );
-};
 
 
 export default function PortfolioPage() {
