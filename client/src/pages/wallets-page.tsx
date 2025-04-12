@@ -190,13 +190,8 @@ const WalletsPage = () => {
                   </Card>
                 </TabsContent>
 
-                {/* Placeholder for educational content tab content */}
-                <TabsContent value="education">
-                  <Card>
-                    <CardContent>
-                      <p>Educational content tracking will be implemented here.</p>
-                    </CardContent>
-                  </Card>
+                <TabsContent value="transactions">
+                  <TransactionHistory />
                 </TabsContent>
               </Tabs>
             </div>

@@ -1,35 +1,68 @@
 
-import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Send, ArrowDownUp, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface TokenBalance {
+  symbol: string;
+  balance: string;
+  usdValue?: string;
+}
 
 interface WalletData {
   address: string;
   balance: string;
-  tokenBalances: Array<{
-    symbol: string;
-    balance: string;
-  }>;
+  tokenBalances: TokenBalance[];
+  type: string;
 }
 
 export function WalletCard() {
+  const { toast } = useToast();
+  const [showSendForm, setShowSendForm] = useState(false);
+  const [recipientAddress, setRecipientAddress] = useState("");
+  const [amount, setAmount] = useState("");
+  const [selectedToken, setSelectedToken] = useState("ETH");
+
   const { data: wallet, isLoading, refetch } = useQuery<WalletData>({
     queryKey: ["/api/web3/wallets"],
+    refetchInterval: 30000
   });
 
-  const connectMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/web3/connect-wallet", {
+  const sendTransaction = useMutation({
+    mutationFn: async (data: { to: string; value: string; token: string }) => {
+      const response = await fetch("/api/web3/transactions/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "ethereum" })
+        body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error("Failed to connect wallet");
+      if (!response.ok) throw new Error("Failed to send transaction");
       return response.json();
     },
-    onSuccess: () => refetch()
+    onSuccess: () => {
+      toast({ title: "Transaction sent successfully" });
+      setShowSendForm(false);
+      setRecipientAddress("");
+      setAmount("");
+      refetch();
+    },
+    onError: () => {
+      toast({ title: "Failed to send transaction", variant: "destructive" });
+    }
   });
+
+  const handleSend = () => {
+    if (!recipientAddress || !amount) return;
+    sendTransaction.mutate({
+      to: recipientAddress,
+      value: amount,
+      token: selectedToken
+    });
+  };
 
   if (isLoading) {
     return (
@@ -53,29 +86,89 @@ export function WalletCard() {
       </div>
 
       {wallet ? (
-        <div className="space-y-4">
-          <div>
-            <div className="text-sm text-slate-500">Address</div>
-            <div className="font-mono text-sm truncate">{wallet.address}</div>
-          </div>
-          <div>
-            <div className="text-sm text-slate-500">Balance</div>
-            <div className="text-lg font-semibold">{wallet.balance} ETH</div>
-          </div>
-          {wallet.tokenBalances?.length > 0 && (
+        <>
+          <div className="space-y-4">
             <div>
-              <div className="text-sm text-slate-500 mb-2">Tokens</div>
-              <div className="space-y-2">
-                {wallet.tokenBalances.map((token) => (
-                  <div key={token.symbol} className="flex justify-between">
-                    <span>{token.symbol}</span>
-                    <span>{token.balance}</span>
-                  </div>
-                ))}
-              </div>
+              <div className="text-sm text-slate-500">Address</div>
+              <div className="font-mono text-sm truncate">{wallet.address}</div>
             </div>
-          )}
-        </div>
+            <div>
+              <div className="text-sm text-slate-500">Balance</div>
+              <div className="text-lg font-semibold">{wallet.balance} ETH</div>
+            </div>
+            {wallet.tokenBalances?.length > 0 && (
+              <div>
+                <div className="text-sm text-slate-500 mb-2">Tokens</div>
+                <div className="space-y-2">
+                  {wallet.tokenBalances.map((token) => (
+                    <div key={token.symbol} className="flex justify-between">
+                      <span>{token.symbol}</span>
+                      <div className="text-right">
+                        <div>{token.balance}</div>
+                        {token.usdValue && (
+                          <div className="text-sm text-slate-500">${token.usdValue}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 mt-6">
+            <Dialog open={showSendForm} onOpenChange={setShowSendForm}>
+              <DialogTrigger asChild>
+                <Button className="flex-1">
+                  <Send className="h-4 w-4 mr-2" />
+                  Send
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Send {selectedToken}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 p-4">
+                  <div>
+                    <label className="text-sm text-slate-500">Recipient Address</label>
+                    <Input
+                      value={recipientAddress}
+                      onChange={(e) => setRecipientAddress(e.target.value)}
+                      placeholder="0x..."
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-500">Amount</label>
+                    <Input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0.0"
+                    />
+                  </div>
+                  <Button 
+                    className="w-full" 
+                    onClick={handleSend}
+                    disabled={sendTransaction.isPending}
+                  >
+                    {sendTransaction.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Send {selectedToken}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" className="flex-1">
+              <ArrowDownUp className="h-4 w-4 mr-2" />
+              Swap
+            </Button>
+            <Button variant="outline" className="flex-1">
+              <Plus className="h-4 w-4 mr-2" />
+              Buy
+            </Button>
+          </div>
+        </>
       ) : (
         <Button 
           onClick={() => connectMutation.mutate()}
