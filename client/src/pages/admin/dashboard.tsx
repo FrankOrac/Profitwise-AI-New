@@ -57,10 +57,22 @@ export default function AdminDashboard() {
     refetchInterval: 30000,
   });
 
-  const { data: analytics } = useQuery({
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ["/api/admin/analytics/overview"],
     refetchInterval: 30000,
   });
+
+  const { data: revenueData } = useQuery({
+    queryKey: ["/api/admin/analytics/revenue"],
+    refetchInterval: 60000,
+  });
+
+  const metrics = {
+    totalUsers: analytics?.totalUsers || 0,
+    activeUsers: analytics?.activeUsers || 0,
+    revenue: analytics?.totalRevenue?.toFixed(2) || "0.00",
+    growth: analytics?.userGrowth?.monthly || 0
+  };
 
   const { data: activityLogs = [] } = useQuery({
     queryKey: ["/api/admin/activity-logs"],

@@ -462,6 +462,17 @@ Provide trading insights in this format:
         return res.status(404).json({ message: "Subscription plan not found" });
       }
 
+      // Create customer if not exists
+      const user = await storage.getUser(userId);
+      if (!user.stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          payment_method: paymentMethodId,
+          invoice_settings: { default_payment_method: paymentMethodId }
+        });
+        await storage.updateUser(userId, { stripeCustomerId: customer.id });
+      }
+
       const stripe = await storage.getPaymentProcessor();
 
       // Create payment intent

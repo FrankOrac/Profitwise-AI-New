@@ -22,6 +22,34 @@ export default function EducationManagement() {
     queryKey: ["/api/education"],
   });
 
+  const createMutation = useMutation({
+    mutationFn: async (newContent: Partial<EducationalContent>) => {
+      const response = await fetch("/api/admin/education", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newContent)
+      });
+      if (!response.ok) throw new Error("Failed to create content");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/education"] });
+      toast({ title: "Content created successfully" });
+      setIsAddDialogOpen(false);
+    }
+  });
+
+  const handleCreate = (formData: FormData) => {
+    createMutation.mutate({
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      category: formData.get("category") as string,
+      difficulty: formData.get("difficulty") as string,
+      content: formData.get("content") as string,
+      duration: formData.get("duration") as string
+    });
+  };
+
   const addMutation = useMutation({
     mutationFn: async (newContent: Partial<EducationalContent>) => {
       const response = await fetch("/api/admin/education", {
