@@ -32,31 +32,9 @@ interface Asset {
   color: string;
 }
 
-// Placeholder for TradeJournal component
-const TradeJournal = () => {
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <h2 className="text-lg font-bold mb-4">Trade Journal</h2>
-        <p>This is a placeholder for the trade journaling feature.</p>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Placeholder for MarketAlerts component
-const MarketAlerts = () => {
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <h2 className="text-lg font-bold mb-4">Market Alerts</h2>
-        <p>This is a placeholder for market alerts.</p>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Placeholder for PortfolioRebalance component
+import TradeJournal from "@/components/dashboard/trade-journal";
+import MarketAlerts from "@/components/dashboard/market-alerts";
+import PortfolioRebalance from "@/components/dashboard/portfolio-rebalance";
 const PortfolioRebalance = () => {
   return (
     <div>
