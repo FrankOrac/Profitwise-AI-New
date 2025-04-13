@@ -87,12 +87,35 @@ export class WebSocketService {
     this.wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         const subscriptions = this.clients.get(client);
+        
+        // Check regular market subscriptions
         if (subscriptions?.has(data.symbol)) {
           client.send(JSON.stringify({
             type: 'MARKET_UPDATE',
             payload: data
           }));
         }
+
+        // Check price alerts
+        subscriptions?.forEach(sub => {
+          if (sub.startsWith(data.symbol + ':')) {
+            const [_, condition, price] = sub.split(':');
+            const triggerPrice = parseFloat(price);
+            
+            if ((condition === 'above' && data.price >= triggerPrice) ||
+                (condition === 'below' && data.price <= triggerPrice)) {
+              client.send(JSON.stringify({
+                type: 'ALERT_TRIGGERED',
+                payload: {
+                  symbol: data.symbol,
+                  condition,
+                  triggerPrice,
+                  currentPrice: data.price
+                }
+              }));
+            }
+          }
+        });
       }
     });
   }

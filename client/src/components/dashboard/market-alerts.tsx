@@ -3,7 +3,7 @@ import Sidebar from "@/components/ui/sidebar";
 import Header from "@/components/header";
 import MobileSidebar from "@/components/ui/mobile-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Bell, Plus, Trash2 } from 'lucide-react';
+import { useWebSocket } from '@/hooks/use-websocket'; // Assuming this hook exists
 
 interface Alert {
   id: number;
@@ -61,6 +62,32 @@ export default function MarketAlerts() {
       refetch();
     }
   });
+
+  const { sendMessage } = useWebSocket();
+
+  const handleCreateAlert = () => {
+    createAlertMutation.mutate(newAlert);
+    // Send alert to WebSocket
+    sendMessage('SET_ALERT', {
+      symbol: newAlert.symbol,
+      condition: newAlert.condition,
+      price: newAlert.price
+    });
+    setNewAlert({ symbol: '', condition: 'above', price: 0 });
+  };
+
+  const handleDeleteAlert = (index: number) => {
+    deleteAlertMutation.mutate(alerts[index].id);
+    // Unsubscribe from alert in WebSocket
+    sendMessage('UNSUBSCRIBE_MARKET', { symbol: alerts[index].symbol });
+  };
+
+  // Subscribe to market updates when component mounts
+  useEffect(() => {
+    alerts.forEach(alert => {
+      sendMessage('SUBSCRIBE_MARKET', { symbol: alert.symbol });
+    });
+  }, [alerts, sendMessage]);
 
   return (
     <>
@@ -114,7 +141,7 @@ export default function MarketAlerts() {
                       />
                       <Button onClick={handleCreateAlert}>Create Alert</Button>
                     </div>
-                    
+
                     <div className="mt-4">
                       <h3 className="text-lg font-semibold mb-2">Active Alerts</h3>
                       {alerts.map((alert, index) => (
@@ -125,40 +152,6 @@ export default function MarketAlerts() {
                             <span>${alert.price}</span>
                           </div>
                           <Button variant="destructive" size="sm" onClick={() => handleDeleteAlert(index)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="above">Above</SelectItem>
-                          <SelectItem value="below">Below</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        type="number"
-                        placeholder="Price"
-                        value={newAlert.price}
-                        onChange={(e) => setNewAlert({ ...newAlert, price: Number(e.target.value) })}
-                      />
-                      <Button onClick={() => createAlertMutation.mutate(newAlert)}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {alerts.map((alert: Alert) => (
-                        <div key={alert.id} className="flex items-center justify-between p-2 bg-slate-50 rounded">
-                          <span>
-                            {alert.symbol} {alert.condition} ${alert.price}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteAlertMutation.mutate(alert.id)}
-                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
