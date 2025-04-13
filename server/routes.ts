@@ -182,10 +182,16 @@ export async function registerRoutes(app: Express) {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
-      const result = await fileConversionService.processFile(req.file.buffer);
-      res.json({ result });
+
+      const result = await fileConversionService.processFile(
+        req.file.buffer,
+        req.file.originalname
+      );
+
+      res.json(result);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to process file' });
+      const message = error instanceof Error ? error.message : 'Failed to process file';
+      res.status(500).json({ error: message });
     }
   });
 

@@ -3,6 +3,11 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
+export interface ConversionResult {
+  markdown: string;
+  originalFileName: string;
+}
+
 export class FileConversionService {
   private readonly uploadDir = path.join(process.cwd(), 'uploads');
 
@@ -12,18 +17,29 @@ export class FileConversionService {
     }
   }
 
-  async convertToMarkdown(file: Express.Multer.File): Promise<string> {
-    const filePath = path.join(this.uploadDir, file.originalname);
-    fs.writeFileSync(filePath, file.buffer);
+  async processFile(buffer: Buffer, originalName: string): Promise<ConversionResult> {
+    const filePath = path.join(this.uploadDir, originalName);
+    fs.writeFileSync(filePath, buffer);
 
     try {
-      const output = execSync(`pandoc -f ${this.getInputFormat(file.originalname)} -t markdown ${filePath}`);
-      fs.unlinkSync(filePath);
-      return output.toString();
+      const markdown = await this.convertToMarkdown(filePath, originalName);
+      return {
+        markdown,
+        originalFileName: originalName
+      };
     } catch (error) {
-      fs.unlinkSync(filePath);
-      throw new Error('Conversion failed');
+      throw new Error(`Conversion failed: ${(error as Error).message}`);
+    } finally {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
     }
+  }
+
+  private async convertToMarkdown(filePath: string, fileName: string): Promise<string> {
+    const format = this.getInputFormat(fileName);
+    const output = execSync(`pandoc -f ${format} -t markdown ${filePath}`);
+    return output.toString();
   }
 
   private getInputFormat(filename: string): string {
@@ -35,9 +51,16 @@ export class FileConversionService {
       '.pptx': 'pptx',
       '.ppt': 'ppt',
       '.xlsx': 'xlsx',
-      '.xls': 'xls'
+      '.xls': 'xls',
+      '.txt': 'txt',
+      '.md': 'markdown'
     };
-    return formats[ext] || 'txt';
+    
+    const format = formats[ext];
+    if (!format) {
+      throw new Error(`Unsupported file format: ${ext}`);
+    }
+    return format;
   }
 }
 
