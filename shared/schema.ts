@@ -132,3 +132,28 @@ export type EducationalContent = typeof educationalContent.$inferSelect;
 
 export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+
+// Trade Copy Settings Table
+export const tradeCopySettings = pgTable("trade_copy_settings", {
+  id: serial("id").primaryKey(),
+  followerId: integer("follower_id").notNull(),
+  traderId: integer("trader_id").notNull(),
+  riskPercentage: decimal("risk_percentage").default('10.0').notNull(),
+  enabled: boolean("enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Trade Alerts Table
+export const tradeAlerts = pgTable("trade_alerts", {
+  id: serial("id").primaryKey(),
+  traderId: integer("trader_id").notNull(),
+  symbol: text("symbol").notNull(),
+  action: text("action").notNull(),
+  price: decimal("price").notNull(),
+  confidence: decimal("confidence"),
+  riskLevel: text("risk_level"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export type TradeCopySetting = typeof tradeCopySettings.$inferSelect;
+export type TradeAlert = typeof tradeAlerts.$inferSelect;

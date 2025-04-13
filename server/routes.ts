@@ -94,3 +94,32 @@ app.get("/api/social/traders/performance", async (req, res) => {
       res.status(500).json({ message: "Failed to disable copy trading" });
     }
   });
+
+  app.post("/api/social/copy-trades/:traderId/settings", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const followerId = req.user!.id;
+      const traderId = parseInt(req.params.traderId);
+      const { riskPercentage } = req.body;
+
+      await socialTrading.enableCopyTrading(followerId, traderId, riskPercentage);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ 
+        message: err instanceof Error ? err.message : "Failed to update copy settings" 
+      });
+    }
+  });
+
+  app.get("/api/social/alerts", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const userId = req.user!.id;
+      const alerts = await storage.getTradeAlerts(userId);
+      res.json(alerts);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch alerts" });
+    }
+  });

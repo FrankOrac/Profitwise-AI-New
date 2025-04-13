@@ -26,13 +26,20 @@ export function TraderCard({ trader, onFollow }: TraderCardProps) {
   const queryClient = useQueryClient();
   const [isCopying, setIsCopying] = useState(trader.isCopying || false);
 
+  const [showSettings, setShowSettings] = useState(false);
+  const [riskPercentage, setRiskPercentage] = useState(10);
+
   const copyTradeMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/social/copy-trades/${trader.id}`, {
+      const response = await fetch(`/api/social/copy-trades/${trader.id}/settings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ riskPercentage })
       });
-      if (!response.ok) throw new Error("Failed to copy trades");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to copy trades");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -136,15 +143,45 @@ export function TraderCard({ trader, onFollow }: TraderCardProps) {
           <Badge className={getRiskColor(trader.risk)}>
             {trader.risk.charAt(0).toUpperCase() + trader.risk.slice(1)} Risk
           </Badge>
-          <Button
-            variant={isCopying ? "destructive" : "outline"}
-            size="sm"
-            onClick={() => isCopying ? stopCopyTradeMutation.mutate() : copyTradeMutation.mutate()}
-            disabled={copyTradeMutation.isLoading || stopCopyTradeMutation.isLoading}
-          >
-            <Copy className="h-4 w-4 mr-2" />
-            {isCopying ? 'Stop Copying' : 'Copy Trades'}
-          </Button>
+          <Dialog open={showSettings} onOpenChange={setShowSettings}>
+            <DialogTrigger asChild>
+              <Button
+                variant={isCopying ? "destructive" : "outline"}
+                size="sm"
+                onClick={() => isCopying ? stopCopyTradeMutation.mutate() : setShowSettings(true)}
+                disabled={copyTradeMutation.isLoading || stopCopyTradeMutation.isLoading}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                {isCopying ? 'Stop Copying' : 'Copy Trades'}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Copy Trading Settings</DialogTitle>
+                <DialogDescription>
+                  Configure how much of your portfolio to risk per trade
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="risk">Risk per trade (%)</Label>
+                  <Input
+                    id="risk"
+                    type="number"
+                    value={riskPercentage}
+                    onChange={(e) => setRiskPercentage(Number(e.target.value))}
+                    min={1}
+                    max={100}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => copyTradeMutation.mutate()}>
+                  Start Copy Trading
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>

@@ -134,6 +134,41 @@ export class SocialTradingService {
       followers: followers.length
     };
   }
+
+  async enableCopyTrading(followerId: number, traderId: number, riskPercentage: number = 10) {
+    // Validate subscription
+    const follower = await storage.getUser(followerId);
+    if (!follower.subscriptionTier.includes('copy_trading')) {
+      throw new Error('Copy trading requires a premium subscription');
+    }
+
+    // Create or update copy settings
+    await storage.saveCopySettings({
+      followerId,
+      traderId,
+      riskPercentage,
+      enabled: true
+    });
+  }
+
+  async executeCopyTrade(traderId: number, tradeDetails: any) {
+    const copySettings = await storage.getCopyTraderSettings(traderId);
+    
+    for (const setting of copySettings) {
+      if (!setting.enabled) continue;
+
+      const followerBalance = await storage.getAccountBalance(setting.followerId);
+      const tradeAmount = (followerBalance * setting.riskPercentage) / 100;
+
+      await storage.executeMarketOrder({
+        userId: setting.followerId,
+        symbol: tradeDetails.symbol,
+        action: tradeDetails.action,
+        amount: tradeAmount,
+        price: tradeDetails.price
+      });
+    }
+  }
 }
 
 export const socialTrading = new SocialTradingService();
