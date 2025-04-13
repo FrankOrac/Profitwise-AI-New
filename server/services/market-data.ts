@@ -9,9 +9,11 @@ export class MarketDataService {
   private openai: OpenAI;
 
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
+    if (process.env.OPENAI_API_KEY) {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+    }
   }
 
   async getQuote(symbol: string) {
@@ -213,6 +215,10 @@ export class MarketDataService {
   }
 
   async generateMarketInsights(data: any) {
+    if (!this.openai) {
+      return "AI insights unavailable - OpenAI API key not configured";
+    }
+
     const prompt = `Analyze this market data and provide trading insights:
       ${JSON.stringify(data)}`;
 
