@@ -81,14 +81,14 @@ export function setupAuth(app: Express) {
         email: z.string().email("Please enter a valid email address"),
         password: z.string().min(6, "Password must be at least 6 characters"),
       });
-      
+
       const userData = registerSchema.parse(req.body);
-      
+
       const existingUser = await storage.getUserByUsername(userData.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
-      
+
       const existingEmail = await storage.getUserByEmail(userData.email);
       if (existingEmail) {
         return res.status(400).json({ message: "Email already exists" });
@@ -124,7 +124,7 @@ export function setupAuth(app: Express) {
       if (!user) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
-      
+
       req.login(user, (err) => {
         if (err) return next(err);
         return res.status(200).json(user);
@@ -147,7 +147,7 @@ export function setupAuth(app: Express) {
   // Add an admin user if none exists
   (async () => {
     const adminUser = await storage.getUserByUsername("admin");
-    
+
     if (!adminUser) {
       const admin = {
         username: "admin",
@@ -156,7 +156,7 @@ export function setupAuth(app: Express) {
         firstName: "Admin",
         lastName: "User",
       };
-      
+
       const user = await storage.createUser(admin);
       await storage.updateUser(user.id, { role: "admin" });
       console.log("Admin user created with username: admin and password: admin123");
