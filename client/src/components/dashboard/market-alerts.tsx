@@ -3,46 +3,64 @@ import Sidebar from "@/components/ui/sidebar";
 import Header from "@/components/header";
 import MobileSidebar from "@/components/ui/mobile-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Bell, AlertTriangle, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { Bell, Plus, Trash2 } from 'lucide-react';
 
 interface Alert {
   id: number;
   symbol: string;
-  condition: "above" | "below";
-  price: string;
+  condition: 'above' | 'below';
+  price: number;
   active: boolean;
 }
 
 export default function MarketAlerts() {
   const isMobile = useIsMobile();
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const { toast } = useToast();
   const [newAlert, setNewAlert] = useState({
-    symbol: "",
-    condition: "above" as const,
-    price: "",
+    symbol: '',
+    condition: 'above' as const,
+    price: 0
   });
 
-  const addAlert = () => {
-    const alert: Alert = {
-      id: Date.now(),
-      ...newAlert,
-      active: true
-    };
-    setAlerts([...alerts, alert]);
-    setNewAlert({ symbol: "", condition: "above", price: "" });
-  };
+  const { data: alerts = [], refetch } = useQuery({
+    queryKey: ['alerts'],
+    queryFn: async () => {
+      const response = await fetch('/api/alerts');
+      return response.json();
+    }
+  });
 
-  const toggleAlert = (id: number) => {
-    setAlerts(alerts.map(alert =>
-      alert.id === id ? { ...alert, active: !alert.active } : alert
-    ));
-  };
+  const createAlertMutation = useMutation({
+    mutationFn: async (alert: Omit<Alert, 'id' | 'active'>) => {
+      const response = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(alert)
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: 'Alert created successfully' });
+      refetch();
+    }
+  });
+
+  const deleteAlertMutation = useMutation({
+    mutationFn: async (alertId: number) => {
+      await fetch(`/api/alerts/${alertId}`, { method: 'DELETE' });
+    },
+    onSuccess: () => {
+      toast({ title: 'Alert deleted successfully' });
+      refetch();
+    }
+  });
 
   return (
     <>
@@ -67,17 +85,19 @@ export default function MarketAlerts() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex space-x-2">
+                    <div className="flex gap-2">
                       <Input
-                        placeholder="Symbol"
+                        placeholder="Symbol (e.g. BTC)"
                         value={newAlert.symbol}
                         onChange={(e) => setNewAlert({ ...newAlert, symbol: e.target.value })}
                       />
                       <Select
                         value={newAlert.condition}
-                        onValueChange={(value) => setNewAlert({ ...newAlert, condition: value as "above" | "below" })}
+                        onValueChange={(value: 'above' | 'below') =>
+                          setNewAlert({ ...newAlert, condition: value })
+                        }
                       >
-                        <SelectTrigger className="w-[120px]">
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -89,41 +109,26 @@ export default function MarketAlerts() {
                         type="number"
                         placeholder="Price"
                         value={newAlert.price}
-                        onChange={(e) => setNewAlert({ ...newAlert, price: e.target.value })}
+                        onChange={(e) => setNewAlert({ ...newAlert, price: Number(e.target.value) })}
                       />
-                      <Button onClick={addAlert}>Add Alert</Button>
+                      <Button onClick={() => createAlertMutation.mutate(newAlert)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
 
                     <div className="space-y-2">
-                      {alerts.map((alert) => (
-                        <div
-                          key={alert.id}
-                          className={`p-3 rounded-lg border flex items-center justify-between ${
-                            alert.active ? "bg-slate-50" : "bg-slate-100"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2">
-                            <AlertTriangle className="h-4 w-4 text-warning" />
-                            <span className="font-medium">{alert.symbol}</span>
-                            {alert.condition === "above" ? (
-                              <ArrowUpRight className="h-4 w-4 text-success" />
-                            ) : (
-                              <ArrowDownRight className="h-4 w-4 text-error" />
-                            )}
-                            <span>${alert.price}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={alert.active ? "success" : "secondary"}>
-                              {alert.active ? "Active" : "Inactive"}
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleAlert(alert.id)}
-                            >
-                              {alert.active ? "Disable" : "Enable"}
-                            </Button>
-                          </div>
+                      {alerts.map((alert: Alert) => (
+                        <div key={alert.id} className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                          <span>
+                            {alert.symbol} {alert.condition} ${alert.price}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteAlertMutation.mutate(alert.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
