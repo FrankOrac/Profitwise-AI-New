@@ -57,19 +57,36 @@ export class SocialTradingService {
     const followers = await storage.getTraderFollowers(traderId);
     const trader = await storage.getUser(traderId);
     const analysis = await marketData.analyzeMarketData(trade.symbol);
+    const quote = await marketData.getQuote(trade.symbol);
     
+    const tradeDetails = {
+      symbol: trade.symbol,
+      type: trade.action,
+      price: quote.price,
+      confidence: analysis.signals.strength,
+      riskLevel: analysis.riskLevel,
+      expectedReturn: analysis.expectedReturn,
+      stopLoss: quote.price * 0.95, // 5% stop loss
+      takeProfit: quote.price * 1.15 // 15% take profit
+    };
+
     // Send notifications to all followers
     await Promise.all(followers.map(follower => 
       emailService.sendEmail(follower.email, 'trade-alert', {
-        symbol: trade.symbol,
-        type: trade.action,
-        price: trade.entryPrice,
-        confidence: analysis.signals.strength,
-        riskLevel: analysis.riskLevel,
+        trader: trader.name,
+        trade: tradeDetails,
         analysis: `${trader.name} has opened a new ${trade.action} position in ${trade.symbol}`,
         dashboardUrl: `${process.env.APP_URL}/social-trading`
       })
     ));
+
+    // Store the trade alert for in-app notifications
+    await storage.createTradeAlert({
+      traderId,
+      followers: followers.map(f => f.id),
+      trade: tradeDetails,
+      timestamp: new Date()
+    });
   }
 
   async sendPerformanceUpdates() {
