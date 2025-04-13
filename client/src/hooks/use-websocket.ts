@@ -1,64 +1,70 @@
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-interface WebSocketMessage {
-  type: string;
-  payload: any;
+interface WebSocketHook {
+  isConnected: boolean;
+  lastMessage: any;
+  sendMessage: (message: any) => void;
+  subscribe: (symbols: string[]) => void;
+  unsubscribe: (symbols: string[]) => void;
 }
 
-export function useWebSocket() {
-  const ws = useRef<WebSocket | null>(null);
+export function useWebSocket(url: string): WebSocketHook {
   const [isConnected, setIsConnected] = useState(false);
-  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
-
-  const sendMessage = useCallback((type: string, payload: any) => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ type, payload }));
-    }
-  }, []);
+  const [lastMessage, setLastMessage] = useState<any>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}`;
-    
-    ws.current = new WebSocket(wsUrl);
+    const ws = new WebSocket(url);
+    wsRef.current = ws;
 
-    ws.current.onopen = () => {
+    ws.onopen = () => {
       setIsConnected(true);
-      console.log('WebSocket connected');
     };
 
-    ws.current.onmessage = (event) => {
+    ws.onclose = () => {
+      setIsConnected(false);
+    };
+
+    ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         setLastMessage(data);
-        
-        switch (data.type) {
-          case 'MARKET_UPDATE':
-            // Handle market data updates
-            break;
-          case 'CONNECTION_STATUS':
-            setIsConnected(data.payload.status === 'connected');
-            break;
-        }
       } catch (error) {
-        console.error('WebSocket message error:', error);
+        console.error('WebSocket message parse error:', error);
       }
     };
 
-    ws.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setIsConnected(false);
-    };
-
-    ws.current.onclose = () => {
-      setIsConnected(false);
-    };
-
     return () => {
-      ws.current?.close();
+      ws.close();
     };
+  }, [url]);
+
+  const sendMessage = useCallback((message: any) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+    }
   }, []);
 
-  return { isConnected, lastMessage, sendMessage };
+  const subscribe = useCallback((symbols: string[]) => {
+    sendMessage({
+      type: 'subscribe',
+      symbols
+    });
+  }, [sendMessage]);
+
+  const unsubscribe = useCallback((symbols: string[]) => {
+    sendMessage({
+      type: 'unsubscribe',
+      symbols
+    });
+  }, [sendMessage]);
+
+  return {
+    isConnected,
+    lastMessage,
+    sendMessage,
+    subscribe,
+    unsubscribe
+  };
 }
