@@ -11,6 +11,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // Initialize WebSocket service
 const wsService = new WebSocketService(server);
+const wsService = new WebSocketService(server);
 export { wsService };
 
 app.use((req, res, next) => {
