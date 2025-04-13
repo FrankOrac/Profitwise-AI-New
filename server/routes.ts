@@ -133,11 +133,37 @@ app.get("/api/social/traders/performance", async (req, res) => {
     res.json({ trades });
   });
 
-  app.post('/api/create-checkout-session', authenticateUser, async (req, res) => { // Added payment endpoint
+  app.post('/api/subscriptions', authenticateUser, async (req, res) => {
     try {
-      const session = await paymentService.createCheckoutSession(req.user.id, req.body.plan);
-      res.json({ sessionId: session.id });
+      const { paymentMethodId, planId } = req.body;
+      const result = await paymentService.createSubscription(
+        req.user.id,
+        paymentMethodId,
+        planId
+      );
+      res.json(result);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create checkout session' });
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : 'Failed to create subscription'
+      });
+    }
+  });
+
+  app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    
+    try {
+      const event = stripe.webhooks.constructEvent(
+        req.body,
+        sig as string,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+      
+      await paymentService.handleWebhook(event);
+      res.json({ received: true });
+    } catch (error) {
+      res.status(400).json({ 
+        error: error instanceof Error ? error.message : 'Webhook Error'
+      });
     }
   });
