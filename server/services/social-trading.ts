@@ -53,6 +53,48 @@ export class SocialTradingService {
     return copyTrade;
   }
 
+  async notifyFollowers(traderId: number, trade: any) {
+    const followers = await storage.getTraderFollowers(traderId);
+    const trader = await storage.getUser(traderId);
+    const analysis = await marketData.analyzeMarketData(trade.symbol);
+    
+    // Send notifications to all followers
+    await Promise.all(followers.map(follower => 
+      emailService.sendEmail(follower.email, 'trade-alert', {
+        symbol: trade.symbol,
+        type: trade.action,
+        price: trade.entryPrice,
+        confidence: analysis.signals.strength,
+        riskLevel: analysis.riskLevel,
+        analysis: `${trader.name} has opened a new ${trade.action} position in ${trade.symbol}`,
+        dashboardUrl: `${process.env.APP_URL}/social-trading`
+      })
+    ));
+  }
+
+  async sendPerformanceUpdates() {
+    const traders = await storage.getAllTraders();
+    
+    for (const trader of traders) {
+      const stats = await this.getTraderStats(trader.id);
+      const followers = await storage.getTraderFollowers(trader.id);
+      
+      if (followers.length > 0) {
+        await Promise.all(followers.map(follower =>
+          emailService.sendEmail(follower.email, 'portfolio-update', {
+            totalValue: stats.performance,
+            dailyChange: stats.winRate,
+            topPerformer: {
+              symbol: trader.topSymbol,
+              change: stats.performance
+            },
+            dashboardUrl: `${process.env.APP_URL}/social-trading/${trader.id}`
+          })
+        ));
+      }
+    }
+  }
+
   async getTraderStats(traderId: number) {
     const trades = await storage.getTraderTrades(traderId);
     const followers = await storage.getTraderFollowers(traderId);

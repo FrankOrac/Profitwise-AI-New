@@ -1,4 +1,3 @@
-
 import nodemailer from 'nodemailer';
 import ejs from 'ejs';
 import path from 'path';
@@ -6,6 +5,7 @@ import fs from 'fs/promises';
 
 export class EmailService {
   private transporter;
+  private emailClient; // Assuming this is injected or available
 
   constructor() {
     this.transporter = nodemailer.createTransport({
@@ -21,7 +21,7 @@ export class EmailService {
 
   async sendEmail(to: string, template: string, data: any) {
     const templatePath = path.join(__dirname, '../emails', template);
-    
+
     const [htmlTemplate, subjectTemplate] = await Promise.all([
       fs.readFile(path.join(templatePath, 'html.ejs'), 'utf-8'),
       fs.readFile(path.join(templatePath, 'subject.ejs'), 'utf-8')
@@ -38,6 +38,58 @@ export class EmailService {
     });
   }
 
+  async sendPasswordResetEmail(user: { email: string }, resetToken: string) {
+    try {
+      await this.emailClient.send({
+        template: 'password-reset',
+        message: {
+          to: user.email
+        },
+        locals: {
+          resetUrl: `${process.env.APP_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`
+        }
+      });
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      throw error;
+    }
+  }
+
+  async sendTradeAlert(user: { email: string }, alert: any) {
+    try {
+      await this.emailClient.send({
+        template: 'trade-alert',
+        message: {
+          to: user.email
+        },
+        locals: {
+          ...alert,
+          dashboardUrl: `${process.env.APP_URL || 'http://localhost:5000'}/portfolio`
+        }
+      });
+    } catch (error) {
+      console.error('Failed to send trade alert:', error);
+      throw error;
+    }
+  }
+
+  async sendPortfolioUpdate(user: { email: string }, update: any) {
+    try {
+      await this.emailClient.send({
+        template: 'portfolio-update',
+        message: {
+          to: user.email
+        },
+        locals: {
+          ...update,
+          dashboardUrl: `${process.env.APP_URL || 'http://localhost:5000'}/portfolio`
+        }
+      });
+    } catch (error) {
+      console.error('Failed to send portfolio update:', error);
+      throw error;
+    }
+  }
   async sendTradeAlert(userId: number, alert: any) {
     const user = await storage.getUser(userId);
     await this.sendEmail(user.email, 'trade-alert', {

@@ -2,23 +2,29 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; }
-    .alert { padding: 20px; background: #f8f9fa; border-radius: 5px; }
-    .price { font-size: 24px; color: #0050C8; }
-    .action { margin-top: 20px; }
-    .button { background: #0050C8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .alert { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .signal { color: #2563eb; font-weight: bold; }
+    .metrics { margin: 15px 0; }
+    .button { background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <div class="alert">
-    <h2>Market Alert: <%= symbol %></h2>
-    <p>Your configured alert has been triggered:</p>
-    <p class="price">Current Price: $<%= price %></p>
-    <p><%= message %></p>
-    <div class="action">
-      <a href="<%= actionUrl %>" class="button">View Details</a>
+  <div class="container">
+    <h2>Trade Alert for <%= symbol %></h2>
+    <div class="alert">
+      <p class="signal"><%= type.toUpperCase() %> Signal Detected</p>
+      <div class="metrics">
+        <p>Current Price: $<%= price %></p>
+        <p>Signal Strength: <%= confidence %></p>
+        <p>Risk Level: <%= riskLevel %></p>
+      </div>
+      <p><%= analysis %></p>
     </div>
+    <a href="<%= dashboardUrl %>" class="button">View Details</a>
   </div>
 </body>
 </html>
