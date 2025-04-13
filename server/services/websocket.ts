@@ -1,42 +1,14 @@
-import WebSocket from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import { Server } from 'http';
-import { marketData } from './market-data'; // Added import
-
+import { marketData } from './market-data';
 
 export class WebSocketService {
-  private wss: WebSocket.Server;
+  private wss: WebSocketServer;
   private clients: Map<WebSocket, Set<string>> = new Map();
 
-  constructor(server: Server) { // Adjusted constructor parameter type
-    this.wss = new WebSocket.Server({ server });
+  constructor(server: Server) {
+    this.wss = new WebSocketServer({ server });
     this.setupWebSocketServer();
-  }
-
-  private async startPriceUpdates() {
-    setInterval(async () => {
-      for (const [ws, symbols] of this.clients.entries()) {
-        if (symbols.size > 0) {
-          const updates = await Promise.all(
-            Array.from(symbols).map(async (symbol) => {
-              const data = await marketData.getRealTimeData(symbol);
-              return {
-                symbol,
-                data: {
-                  price: parseFloat(data['Global Quote']['05. price']),
-                  change: parseFloat(data['Global Quote']['09. change']),
-                  volume: parseInt(data['Global Quote']['06. volume'])
-                }
-              };
-            })
-          );
-
-          ws.send(JSON.stringify({
-            type: 'price_update',
-            data: updates
-          }));
-        }
-      }
-    }, 5000); // Update every 5 seconds
   }
 
   private setupWebSocketServer() {
@@ -45,7 +17,7 @@ export class WebSocketService {
 
       ws.on('message', async (message: string) => {
         try {
-          const data = JSON.parse(message);
+          const data = JSON.parse(message.toString());
 
           switch (data.type) {
             case 'subscribe':
@@ -65,7 +37,6 @@ export class WebSocketService {
       });
     });
 
-    // Start price updates
     this.startPriceUpdates();
   }
 
@@ -104,6 +75,6 @@ export class WebSocketService {
           }
         }
       }
-    }, 5000); // Update every 5 seconds
+    }, 5000);
   }
 }
