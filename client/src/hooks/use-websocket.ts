@@ -1,8 +1,15 @@
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
-export function useWebSocket(url: string) {
+interface WebSocketMessage {
+  type: string;
+  payload: any;
+}
+
+export function useWebSocket() {
   const ws = useRef<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
 
   const sendMessage = useCallback((type: string, payload: any) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
@@ -11,22 +18,27 @@ export function useWebSocket(url: string) {
   }, []);
 
   useEffect(() => {
-    ws.current = new WebSocket(url);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}`;
+    
+    ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
+      setIsConnected(true);
       console.log('WebSocket connected');
     };
 
     ws.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        // Handle different message types
+        setLastMessage(data);
+        
         switch (data.type) {
           case 'MARKET_UPDATE':
-            // Handle market updates
+            // Handle market data updates
             break;
-          case 'PORTFOLIO_UPDATE':
-            // Handle portfolio updates
+          case 'CONNECTION_STATUS':
+            setIsConnected(data.payload.status === 'connected');
             break;
         }
       } catch (error) {
@@ -36,12 +48,17 @@ export function useWebSocket(url: string) {
 
     ws.current.onerror = (error) => {
       console.error('WebSocket error:', error);
+      setIsConnected(false);
+    };
+
+    ws.current.onclose = () => {
+      setIsConnected(false);
     };
 
     return () => {
       ws.current?.close();
     };
-  }, [url]);
+  }, []);
 
-  return { sendMessage };
+  return { isConnected, lastMessage, sendMessage };
 }
