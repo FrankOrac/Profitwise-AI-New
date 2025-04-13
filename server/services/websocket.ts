@@ -1,4 +1,3 @@
-
 import { WebSocket, WebSocketServer } from 'ws';
 import { Server } from 'http';
 
@@ -46,7 +45,7 @@ export class WebSocketService {
 
   private handleMessage(ws: WebSocket, data: WebSocketMessage) {
     const subscriptions = this.clients.get(ws);
-    
+
     switch (data.type) {
       case 'SUBSCRIBE_MARKET':
         if (data.payload.symbol) {
@@ -65,13 +64,22 @@ export class WebSocketService {
           subscriptions?.add(alertKey);
         }
         break;
-        
+
       case 'UNSUBSCRIBE_MARKET':
         if (data.payload.symbol) {
           subscriptions?.delete(data.payload.symbol);
         }
         break;
     }
+  }
+
+  private validateMarketData(data: any): boolean {
+    return (
+      data &&
+      typeof data.symbol === 'string' &&
+      typeof data.price === 'number' &&
+      !isNaN(data.price)
+    );
   }
 
   public broadcast(type: string, payload: any) {
@@ -83,40 +91,58 @@ export class WebSocketService {
     });
   }
 
-  public broadcastMarketData(data: MarketData) {
-    this.wss.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        const subscriptions = this.clients.get(client);
-        
-        // Check regular market subscriptions
-        if (subscriptions?.has(data.symbol)) {
-          client.send(JSON.stringify({
-            type: 'MARKET_UPDATE',
-            payload: data
-          }));
-        }
+  private handleMarketData(data: any) {
+    try {
+      if (!this.validateMarketData(data)) {
+        console.error('Invalid market data received:', data);
+        return;
+      }
 
-        // Check price alerts
-        subscriptions?.forEach(sub => {
-          if (sub.startsWith(data.symbol + ':')) {
-            const [_, condition, price] = sub.split(':');
-            const triggerPrice = parseFloat(price);
-            
-            if ((condition === 'above' && data.price >= triggerPrice) ||
-                (condition === 'below' && data.price <= triggerPrice)) {
+      this.wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          try {
+            const subscriptions = this.clients.get(client);
+
+            // Check regular market subscriptions
+            if (subscriptions?.has(data.symbol)) {
               client.send(JSON.stringify({
-                type: 'ALERT_TRIGGERED',
-                payload: {
-                  symbol: data.symbol,
-                  condition,
-                  triggerPrice,
-                  currentPrice: data.price
-                }
+                type: 'MARKET_UPDATE',
+                payload: data
               }));
             }
+
+            // Check price alerts
+            subscriptions?.forEach(sub => {
+              if (sub.startsWith(data.symbol + ':')) {
+                const [_, condition, price] = sub.split(':');
+                const triggerPrice = parseFloat(price);
+
+                if (!isNaN(triggerPrice) && 
+                    ((condition === 'above' && data.price >= triggerPrice) ||
+                     (condition === 'below' && data.price <= triggerPrice))) {
+                  client.send(JSON.stringify({
+                    type: 'ALERT_TRIGGERED',
+                    payload: {
+                      symbol: data.symbol,
+                      condition,
+                      triggerPrice,
+                      currentPrice: data.price,
+                      timestamp: new Date().toISOString()
+                    }
+                  }));
+                }
+              }
+            });
+          } catch (err) {
+            console.error('Error processing client subscription:', err);
           }
-        });
-      }
-    });
+        }
+      });
+    } catch (err) {
+      console.error('Error in handleMarketData:', err);
+    }
+  }
+  public broadcastMarketData(data: MarketData) {
+    this.handleMarketData(data);
   }
 }
