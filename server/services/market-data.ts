@@ -1,10 +1,18 @@
-
 import axios from 'axios';
 import { technicalAnalysis } from '@mathieuc/tradingview';
+import OpenAI from 'openai';
+import { storage } from '../storage';
 
 export class MarketDataService {
   private apiKey = process.env.ALPHA_VANTAGE_API_KEY;
   private baseUrl = 'https://www.alphavantage.co/query';
+  private openai: OpenAI;
+
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+  }
 
   async getQuote(symbol: string) {
     try {
@@ -15,7 +23,7 @@ export class MarketDataService {
           apikey: this.apiKey
         }
       });
-      
+
       const data = response.data['Global Quote'];
       return {
         symbol,
@@ -78,7 +86,7 @@ export class MarketDataService {
   private calculateRSI(prices: number[], period: number): number {
     let gains = 0;
     let losses = 0;
-    
+
     for (let i = 1; i < period + 1; i++) {
       const difference = prices[prices.length - i] - prices[prices.length - i - 1];
       if (difference >= 0) {
@@ -87,7 +95,7 @@ export class MarketDataService {
         losses -= difference;
       }
     }
-    
+
     const rs = gains / losses;
     return 100 - (100 / (1 + rs));
   }
@@ -97,7 +105,7 @@ export class MarketDataService {
     const ema26 = this.calculateEMA(prices, 26);
     const macdLine = ema12 - ema26;
     const signalLine = this.calculateEMA([macdLine], 9);
-    
+
     return {
       line: macdLine,
       signal: signalLine,
@@ -108,11 +116,11 @@ export class MarketDataService {
   private calculateEMA(prices: number[], period: number): number {
     const multiplier = 2 / (period + 1);
     let ema = prices[0];
-    
+
     for (let i = 1; i < prices.length; i++) {
       ema = (prices[i] - ema) * multiplier + ema;
     }
-    
+
     return ema;
   }
 
@@ -124,11 +132,11 @@ export class MarketDataService {
 
   private calculateRiskLevel(signals: any): 'low' | 'moderate' | 'high' {
     let riskScore = 0;
-    
+
     if (signals.volatility === 'high') riskScore += 2;
     if (signals.strength === 'overbought' || signals.strength === 'oversold') riskScore += 1;
     if (signals.momentum !== signals.trend) riskScore += 1;
-    
+
     return riskScore <= 1 ? 'low' : riskScore <= 2 ? 'moderate' : 'high';
   }
 
@@ -138,13 +146,16 @@ export class MarketDataService {
         portfolio.map(asset => this.analyzeMarketData(asset.symbol))
       );
 
+      const openaiInsights = await this.generateMarketInsights(analyses);
+
+
       return analyses.map((analysis, index) => {
         const asset = portfolio[index];
         const signals = analysis.signals;
-        
+
         let recommendation = 'hold';
         let confidence = 'moderate';
-        
+
         if (signals.trend === 'upward' && signals.momentum === 'positive' && signals.strength !== 'overbought') {
           recommendation = 'buy';
           confidence = 'high';
@@ -163,7 +174,7 @@ export class MarketDataService {
           - RSI: ${analysis.technicalIndicators.rsi.toFixed(2)}
           - Risk Level: ${analysis.riskLevel}
           
-          Current price $${analysis.currentPrice} with ${signals.volatility} volatility.`,
+          Current price $${analysis.currentPrice} with ${signals.volatility} volatility.  ${openaiInsights}`,
           indicators: analysis.technicalIndicators,
           confidence,
           timestamp: new Date()
@@ -185,7 +196,7 @@ export class MarketDataService {
           apikey: this.apiKey
         }
       });
-      
+
       const timeSeries = response.data['Time Series (Daily)'];
       return Object.entries(timeSeries).map(([date, data]: [string, any]) => ({
         date,
@@ -199,6 +210,25 @@ export class MarketDataService {
       console.error(`Failed to fetch historical data for ${symbol}:`, error);
       throw error;
     }
+  }
+
+  async generateMarketInsights(data: any) {
+    const prompt = `Analyze this market data and provide trading insights:
+      ${JSON.stringify(data)}`;
+
+    const response = await this.openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    return response.choices[0].message.content;
+  }
+
+  async getRealTimeData(symbol: string) {
+    const response = await fetch(
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`
+    );
+    return response.json();
   }
 }
 

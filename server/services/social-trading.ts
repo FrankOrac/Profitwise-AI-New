@@ -1,10 +1,19 @@
-
 import { storage } from '../storage';
 import { marketData } from './market-data';
 import { emailService } from './email';
 
+export interface Trade {
+  id: string;
+  userId: string;
+  symbol: string;
+  type: 'buy' | 'sell';
+  amount: number;
+  price: number;
+  timestamp: Date;
+}
+
 export class SocialTradingService {
-  async createPost(userId: number, data: any) {
+  async createPost(userId: string, data: any) {
     const post = await storage.createTradePost({
       ...data,
       userId,
@@ -13,7 +22,7 @@ export class SocialTradingService {
 
     // Get market data for the asset
     const quote = await marketData.getQuote(data.symbol);
-    
+
     // Store entry price for future P&L calculation
     await storage.saveTradeEntry({
       postId: post.id,
@@ -24,14 +33,14 @@ export class SocialTradingService {
     return post;
   }
 
-  async copyTrade(followerId: number, postId: number) {
+  async copyTrade(followerId: string, postId: number) {
     const post = await storage.getTradePostById(postId);
     if (!post) throw new Error('Trade not found');
 
     // Check if user has sufficient balance
     const user = await storage.getUser(followerId);
     const quote = await marketData.getQuote(post.symbol);
-    
+
     const copyTrade = await storage.executeCopyTrade({
       followerId,
       traderId: post.userId,
@@ -53,12 +62,12 @@ export class SocialTradingService {
     return copyTrade;
   }
 
-  async notifyFollowers(traderId: number, trade: any) {
+  async notifyFollowers(traderId: string, trade: any) {
     const followers = await storage.getTraderFollowers(traderId);
     const trader = await storage.getUser(traderId);
     const analysis = await marketData.analyzeMarketData(trade.symbol);
     const quote = await marketData.getQuote(trade.symbol);
-    
+
     const tradeDetails = {
       symbol: trade.symbol,
       type: trade.action,
@@ -71,7 +80,7 @@ export class SocialTradingService {
     };
 
     // Send notifications to all followers
-    await Promise.all(followers.map(follower => 
+    await Promise.all(followers.map(follower =>
       emailService.sendEmail(follower.email, 'trade-alert', {
         trader: trader.name,
         trade: tradeDetails,
@@ -91,11 +100,11 @@ export class SocialTradingService {
 
   async sendPerformanceUpdates() {
     const traders = await storage.getAllTraders();
-    
+
     for (const trader of traders) {
       const stats = await this.getTraderStats(trader.id);
       const followers = await storage.getTraderFollowers(trader.id);
-      
+
       if (followers.length > 0) {
         await Promise.all(followers.map(follower =>
           emailService.sendEmail(follower.email, 'portfolio-update', {
@@ -112,7 +121,7 @@ export class SocialTradingService {
     }
   }
 
-  async getTraderStats(traderId: number) {
+  async getTraderStats(traderId: string) {
     const trades = await storage.getTraderTrades(traderId);
     const followers = await storage.getTraderFollowers(traderId);
 
@@ -122,7 +131,7 @@ export class SocialTradingService {
     for (const trade of trades) {
       const quote = await marketData.getQuote(trade.symbol);
       const pnl = (quote.price - trade.entryPrice) * trade.position;
-      
+
       if (pnl > 0) winCount++;
       totalPnL += pnl;
     }
@@ -135,7 +144,7 @@ export class SocialTradingService {
     };
   }
 
-  async enableCopyTrading(followerId: number, traderId: number, riskPercentage: number = 10) {
+  async enableCopyTrading(followerId: string, traderId: string, riskPercentage: number = 10) {
     // Validate subscription
     const follower = await storage.getUser(followerId);
     if (!follower.subscriptionTier.includes('copy_trading')) {
@@ -151,9 +160,9 @@ export class SocialTradingService {
     });
   }
 
-  async executeCopyTrade(traderId: number, tradeDetails: any) {
+  async executeCopyTrade(traderId: string, tradeDetails: any) {
     const copySettings = await storage.getCopyTraderSettings(traderId);
-    
+
     for (const setting of copySettings) {
       if (!setting.enabled) continue;
 
@@ -169,6 +178,29 @@ export class SocialTradingService {
       });
     }
   }
+
+  async followTrader(followerId: string, traderId: string) {
+    await storage.db.insert('follows').values({
+      followerId,
+      traderId,
+      createdAt: new Date()
+    });
+  }
+
+  async unfollowTrader(followerId: string, traderId: string) {
+    await storage.db.delete('follows')
+      .where('followerId = ? AND traderId = ?', [followerId, traderId]);
+  }
+
+
+  private calculateStats(trades: Trade[]) {
+    // Calculate win rate, profit factor, etc.
+    return {
+      totalTrades: trades.length,
+      winRate: 0.65, // Implement actual calculation
+      profitFactor: 1.5 // Implement actual calculation
+    };
+  }
 }
 
-export const socialTrading = new SocialTradingService();
+export const socialTradingService = new SocialTradingService();

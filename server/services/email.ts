@@ -1,16 +1,16 @@
 import nodemailer from 'nodemailer';
-import { Email } from 'email-templates';
+import ejs from 'ejs';
 import path from 'path';
+import fs from 'fs';
 
 export class EmailService {
-  private transporter;
-  private emailClient; // Assuming this is injected or available
+  private transporter: nodemailer.Transporter;
 
   constructor() {
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
@@ -18,91 +18,33 @@ export class EmailService {
     });
   }
 
-  async sendEmail(to: string, template: string, data: any) {
-    const templatePath = path.join(__dirname, '../emails', template);
-
-    const [htmlTemplate, subjectTemplate] = await Promise.all([
-      fs.readFile(path.join(templatePath, 'html.ejs'), 'utf-8'),
-      fs.readFile(path.join(templatePath, 'subject.ejs'), 'utf-8')
-    ]);
-
-    const html = ejs.render(htmlTemplate, data);
-    const subject = ejs.render(subjectTemplate, data);
+  async sendTradeAlert(userEmail: string, alert: any) {
+    const template = await this.loadTemplate('trade-alert');
+    const html = ejs.render(template, { alert });
 
     await this.transporter.sendMail({
       from: process.env.SMTP_FROM,
-      to,
-      subject,
+      to: userEmail,
+      subject: 'Trade Alert',
       html
     });
   }
 
-  async sendPasswordResetEmail(user: { email: string }, resetToken: string) {
-    try {
-      await this.emailClient.send({
-        template: 'password-reset',
-        message: {
-          to: user.email
-        },
-        locals: {
-          resetUrl: `${process.env.APP_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`
-        }
-      });
-    } catch (error) {
-      console.error('Failed to send password reset email:', error);
-      throw error;
-    }
-  }
+  async sendPortfolioUpdate(userEmail: string, portfolio: any) {
+    const template = await this.loadTemplate('portfolio-update');
+    const html = ejs.render(template, { portfolio });
 
-  async sendTradeAlert(user: { email: string }, alert: any) {
-    try {
-      await this.emailClient.send({
-        template: 'trade-alert',
-        message: {
-          to: user.email
-        },
-        locals: {
-          ...alert,
-          dashboardUrl: `${process.env.APP_URL || 'http://localhost:5000'}/portfolio`
-        }
-      });
-    } catch (error) {
-      console.error('Failed to send trade alert:', error);
-      throw error;
-    }
-  }
-
-  async sendPortfolioUpdate(user: { email: string }, update: any) {
-    try {
-      await this.emailClient.send({
-        template: 'portfolio-update',
-        message: {
-          to: user.email
-        },
-        locals: {
-          ...update,
-          dashboardUrl: `${process.env.APP_URL || 'http://localhost:5000'}/portfolio`
-        }
-      });
-    } catch (error) {
-      console.error('Failed to send portfolio update:', error);
-      throw error;
-    }
-  }
-  async sendTradeAlert(userId: number, alert: any) {
-    const user = await storage.getUser(userId);
-    await this.sendEmail(user.email, 'trade-alert', {
-      user,
-      alert
+    await this.transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: userEmail,
+      subject: 'Portfolio Update',
+      html
     });
   }
 
-  async sendPortfolioUpdate(userId: number, update: any) {
-    const user = await storage.getUser(userId);
-    await this.sendEmail(user.email, 'portfolio-update', {
-      user,
-      update
-    });
+  private async loadTemplate(name: string): Promise<string> {
+    const templatePath = path.join(__dirname, '../emails', name, 'html.ejs');
+    return fs.promises.readFile(templatePath, 'utf8');
   }
 }
 
