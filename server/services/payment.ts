@@ -2,16 +2,22 @@
 import Stripe from 'stripe';
 import { storage } from '../storage';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY environment variable. Please set it in the Secrets tab.');
-}
+let stripe: Stripe | null = null;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2023-10-16',
+  });
+}
 
 export class PaymentService {
   async createCheckoutSession(userId: number, plan: string) {
+    if (!stripe) {
+      return {
+        error: "Payment processing unavailable - Stripe not configured",
+        success: false
+      };
+    }
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',

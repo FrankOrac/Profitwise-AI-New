@@ -17,6 +17,18 @@ export class MarketDataService {
   }
 
   async getQuote(symbol: string) {
+    if (!this.apiKey) {
+      // Use mock data if API key is not available
+      const mockPrice = this.mockPrices[symbol] || 100;
+      return {
+        symbol,
+        price: mockPrice,
+        change: (Math.random() - 0.5) * 2,
+        changePercent: (Math.random() - 0.5) * 2,
+        volume: Math.floor(Math.random() * 1000000)
+      };
+    }
+    
     try {
       const response = await axios.get(this.baseUrl, {
         params: {
