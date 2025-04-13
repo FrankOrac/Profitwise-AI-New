@@ -1,3 +1,7 @@
+import { marketDataService } from './services/market-data';
+import { portfolioService } from './services/portfolio';
+import { paymentService } from './services/payment'; // Added import for payment service
+
 app.get("/api/social/traders/performance", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -121,5 +125,19 @@ app.get("/api/social/traders/performance", async (req, res) => {
       res.json(alerts);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch alerts" });
+    }
+  });
+
+  app.post('/api/portfolio/rebalance', authenticateUser, async (req, res) => { //Existing route
+    const trades = await portfolioService.rebalancePortfolio(req.user.id, req.body);
+    res.json({ trades });
+  });
+
+  app.post('/api/create-checkout-session', authenticateUser, async (req, res) => { // Added payment endpoint
+    try {
+      const session = await paymentService.createCheckoutSession(req.user.id, req.body.plan);
+      res.json({ sessionId: session.id });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create checkout session' });
     }
   });
