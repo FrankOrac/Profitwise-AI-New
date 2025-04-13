@@ -1,10 +1,14 @@
-import express, { Express } from 'express';
+import express from 'express';
+import multer from 'multer';
+import { fileConversionService } from './services/file-conversion';
 import { marketDataService } from './services/market-data';
 import { portfolioService } from './services/portfolio';
 import { paymentService } from './services/payment';
 import { authenticateUser } from './auth';
 import stripe from 'stripe';
 import { storage } from './storage';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express) {
   app.get("/api/social/traders/performance", async (req, res) => {
@@ -156,20 +160,32 @@ export async function registerRoutes(app: Express) {
 
   app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
-    
+
     try {
       const event = stripe.webhooks.constructEvent(
         req.body,
         sig as string,
         process.env.STRIPE_WEBHOOK_SECRET!
       );
-      
+
       await paymentService.handleWebhook(event);
       res.json({ received: true });
     } catch (error) {
       res.status(400).json({ 
         error: error instanceof Error ? error.message : 'Webhook Error'
       });
+    }
+  });
+
+  app.post('/api/upload', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+      const result = await fileConversionService.processFile(req.file.buffer);
+      res.json({ result });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to process file' });
     }
   });
 
