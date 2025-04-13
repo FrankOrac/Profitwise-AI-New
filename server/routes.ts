@@ -1,8 +1,13 @@
+import express, { Express } from 'express';
 import { marketDataService } from './services/market-data';
 import { portfolioService } from './services/portfolio';
-import { paymentService } from './services/payment'; // Added import for payment service
+import { paymentService } from './services/payment';
+import { authenticateUser } from './auth';
+import stripe from 'stripe';
+import { storage } from './storage';
 
-app.get("/api/social/traders/performance", async (req, res) => {
+export async function registerRoutes(app: Express) {
+  app.get("/api/social/traders/performance", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
@@ -128,7 +133,7 @@ app.get("/api/social/traders/performance", async (req, res) => {
     }
   });
 
-  app.post('/api/portfolio/rebalance', authenticateUser, async (req, res) => { //Existing route
+  app.post('/api/portfolio/rebalance', authenticateUser, async (req, res) => {
     const trades = await portfolioService.rebalancePortfolio(req.user.id, req.body);
     res.json({ trades });
   });
@@ -167,3 +172,6 @@ app.get("/api/social/traders/performance", async (req, res) => {
       });
     }
   });
+
+  return app;
+}
