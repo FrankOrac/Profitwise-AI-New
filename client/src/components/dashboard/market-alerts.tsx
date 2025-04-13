@@ -97,7 +97,39 @@ export default function MarketAlerts() {
                           setNewAlert({ ...newAlert, condition: value })
                         }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Condition" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="above">Above</SelectItem>
+                          <SelectItem value="below">Below</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        placeholder="Price"
+                        className="w-32"
+                        value={newAlert.price}
+                        onChange={(e) => setNewAlert({ ...newAlert, price: parseFloat(e.target.value) })}
+                      />
+                      <Button onClick={handleCreateAlert}>Create Alert</Button>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <h3 className="text-lg font-semibold mb-2">Active Alerts</h3>
+                      {alerts.map((alert, index) => (
+                        <div key={index} className="flex items-center justify-between bg-background p-3 rounded-lg mb-2">
+                          <div>
+                            <span className="font-medium">{alert.symbol}</span>
+                            <span className="mx-2">{alert.condition}</span>
+                            <span>${alert.price}</span>
+                          </div>
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteAlert(index)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

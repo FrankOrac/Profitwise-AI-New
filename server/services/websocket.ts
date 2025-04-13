@@ -57,6 +57,14 @@ export class WebSocketService {
           }));
         }
         break;
+
+      case 'SET_ALERT':
+        if (data.payload.symbol && data.payload.condition && data.payload.price) {
+          // Store alert in user's subscription set with alert metadata
+          const alertKey = `${data.payload.symbol}:${data.payload.condition}:${data.payload.price}`;
+          subscriptions?.add(alertKey);
+        }
+        break;
         
       case 'UNSUBSCRIBE_MARKET':
         if (data.payload.symbol) {
