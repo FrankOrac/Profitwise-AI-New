@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
-import ejs from 'ejs';
+import { Email } from 'email-templates';
 import path from 'path';
-import fs from 'fs/promises';
 
 export class EmailService {
   private transporter;
