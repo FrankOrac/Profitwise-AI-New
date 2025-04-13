@@ -3,8 +3,15 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+const server = require('http').createServer(app);
+import { WebSocketService } from './services/websocket';
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Initialize WebSocket service
+const wsService = new WebSocketService(server);
+export { wsService };
 
 app.use((req, res, next) => {
   const start = Date.now();
