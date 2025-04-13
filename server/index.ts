@@ -3,7 +3,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-const server = require('http').createServer(app);
+import { createServer } from 'http';
+const server = createServer(app);
 import { WebSocketService } from './services/websocket';
 
 app.use(express.json());
