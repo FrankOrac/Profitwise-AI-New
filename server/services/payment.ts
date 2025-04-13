@@ -29,12 +29,13 @@ export class PaymentService {
   }
 
   private getPriceId(plan: string): string {
+    // Replace these IDs with your actual Stripe price IDs
     const priceIds: Record<string, string> = {
-      basic: process.env.STRIPE_BASIC_PRICE_ID!,
-      pro: process.env.STRIPE_PRO_PRICE_ID!,
-      enterprise: process.env.STRIPE_ENTERPRISE_PRICE_ID!
+      basic: 'price_H5j6K8L9',      // Basic plan price ID
+      pro: 'price_M3n4P5q6',        // Pro plan price ID  
+      enterprise: 'price_R7s8T9u0'   // Enterprise plan price ID
     };
-    return priceIds[plan];
+    return priceIds[plan.toLowerCase()];
   }
 }
 
