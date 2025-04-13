@@ -51,7 +51,7 @@ args = "npm install"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd client && npm install"
+args = "cd client && npm install && cd .."
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"

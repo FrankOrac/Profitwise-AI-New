@@ -1,6 +1,6 @@
-
 import { WebSocket, WebSocketServer } from 'ws';
 import { Server } from 'http';
+import { log } from '../vite';
 
 interface MarketData {
   symbol: string;
@@ -35,6 +35,7 @@ export class WebSocketService {
         this.clients.set(ws, new Set());
         this.setupClientHandlers(ws);
         this.sendConnectionStatus(ws, true);
+        log('Client connected to WebSocket');
       } catch (error) {
         console.error('Error in WebSocket connection setup:', error);
         this.handleError(ws, 'Connection setup failed');
@@ -59,6 +60,7 @@ export class WebSocketService {
     ws.on('close', () => {
       try {
         this.clients.delete(ws);
+        log('Client disconnected from WebSocket');
       } catch (error) {
         console.error('Error in WebSocket close handler:', error);
       }
@@ -231,9 +233,9 @@ export class WebSocketService {
           const [_, condition, price] = sub.split(':');
           const triggerPrice = parseFloat(price);
 
-          if (!isNaN(triggerPrice) && 
-              ((condition === 'above' && data.price >= triggerPrice) ||
-               (condition === 'below' && data.price <= triggerPrice))) {
+          if (!isNaN(triggerPrice) &&
+            ((condition === 'above' && data.price >= triggerPrice) ||
+              (condition === 'below' && data.price <= triggerPrice))) {
             this.sendMessage(ws, 'ALERT_TRIGGERED', {
               symbol: data.symbol,
               condition,
