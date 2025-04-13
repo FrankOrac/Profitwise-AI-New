@@ -1,8 +1,8 @@
-import { Card } from "@/components/ui/card";
+
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, Check } from "lucide-react";
 import { EducationalContent } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -45,7 +45,7 @@ export function EducationCard({ content }: EducationCardProps) {
           <PlayCircle className="h-4 w-4 mr-1.5" />
           <span>{content.difficulty} • {content.duration}</span>
         </div>
-      <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex items-center justify-between">
           {content.progress && (
             <div className="flex-1 mr-4">
               <div className="h-2 bg-slate-200 rounded-full">
