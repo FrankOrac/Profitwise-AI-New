@@ -1,69 +1,84 @@
 
-import { db } from '../db';
-import { portfolioAssets } from '@/shared/schema';
-import { eq } from 'drizzle-orm';
+import { Portfolio, Asset, RebalanceSettings } from '@shared/schema';
 import { marketData } from './market-data';
+import { storage } from '../storage';
+import { emailService } from './email';
 
 export class PortfolioService {
-  async rebalancePortfolio(userId: number, targetAllocations: Record<string, number>) {
-    try {
-      // Get current portfolio
-      const currentAssets = await db.select().from(portfolioAssets).where(eq(portfolioAssets.userId, userId));
+  async rebalancePortfolio(userId: number, settings: RebalanceSettings) {
+    const portfolio = await storage.getPortfolio(userId);
+    const targetAllocations = settings.targetAllocations;
+    const trades: any[] = [];
+
+    // Calculate current total value
+    const totalValue = portfolio.assets.reduce((sum, asset) => {
+      return sum + (asset.quantity * asset.currentPrice);
+    }, 0);
+
+    // Calculate required trades
+    for (const asset of portfolio.assets) {
+      const currentAllocation = (asset.quantity * asset.currentPrice) / totalValue;
+      const targetAllocation = targetAllocations[asset.symbol] || 0;
+      const difference = targetAllocation - currentAllocation;
       
-      // Calculate total portfolio value
-      const totalValue = currentAssets.reduce((sum, asset) => sum + Number(asset.value), 0);
-      
-      // Calculate required trades
-      const trades = currentAssets.map(asset => {
-        const currentAllocation = (Number(asset.value) / totalValue) * 100;
-        const targetAllocation = targetAllocations[asset.symbol] || 0;
-        const difference = targetAllocation - currentAllocation;
+      if (Math.abs(difference) > settings.threshold) {
+        const tradeAmount = difference * totalValue;
+        const tradeQuantity = Math.abs(tradeAmount / asset.currentPrice);
         
-        const tradeValue = (difference / 100) * totalValue;
-        const tradeQuantity = Math.abs(tradeValue / Number(asset.currentPrice));
-        
-        return {
+        trades.push({
           symbol: asset.symbol,
-          action: difference > 0 ? 'buy' : 'sell',
+          type: difference > 0 ? 'buy' : 'sell',
           quantity: tradeQuantity,
-          estimatedValue: Math.abs(tradeValue)
-        };
-      });
-
-      // Update portfolio based on trades
-      for (const trade of trades) {
-        if (trade.quantity === 0) continue;
-        
-        await db
-          .update(portfolioAssets)
-          .set({
-            quantity: trade.action === 'buy' 
-              ? portfolioAssets.quantity + trade.quantity
-              : portfolioAssets.quantity - trade.quantity
-          })
-          .where(eq(portfolioAssets.symbol, trade.symbol));
+          price: asset.currentPrice
+        });
       }
-
-      return trades;
-    } catch (error) {
-      console.error('Failed to rebalance portfolio:', error);
-      throw error;
     }
+
+    // Execute trades if auto-trading is enabled
+    if (settings.autoTrade) {
+      for (const trade of trades) {
+        await this.executeTrade(userId, trade);
+      }
+    }
+
+    // Send notification
+    await emailService.sendPortfolioUpdate(userId, {
+      type: 'rebalance',
+      trades,
+      newAllocations: targetAllocations
+    });
+
+    return trades;
   }
 
-  async getRebalancingRecommendations(userId: number) {
-    const assets = await db.select().from(portfolioAssets).where(eq(portfolioAssets.userId, userId));
-    const insights = await marketData.generateInsights(assets);
+  private async executeTrade(userId: number, trade: any) {
+    // Implement trade execution logic here
+    await storage.recordTrade(userId, {
+      symbol: trade.symbol,
+      type: trade.type,
+      quantity: trade.quantity,
+      price: trade.price,
+      timestamp: new Date()
+    });
+  }
+
+  async getRebalanceSuggestions(userId: number) {
+    const portfolio = await storage.getPortfolio(userId);
+    const suggestions = [];
     
-    return insights.map(insight => ({
-      symbol: insight.symbol,
-      recommendation: insight.type,
-      confidence: insight.confidence,
-      currentAllocation: 0, // Calculate from portfolio
-      suggestedAllocation: 0, // Based on risk profile and market conditions
-      reason: insight.content
-    }));
+    for (const asset of portfolio.assets) {
+      const analysis = await marketData.analyzeMarketData(asset.symbol);
+      if (analysis.riskLevel === 'high') {
+        suggestions.push({
+          symbol: asset.symbol,
+          action: 'reduce',
+          reason: 'High market volatility'
+        });
+      }
+    }
+    
+    return suggestions;
   }
 }
 
-export const portfolio = new PortfolioService();
+export const portfolioService = new PortfolioService();

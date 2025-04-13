@@ -1,115 +1,131 @@
-
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Slider } from "@/components/ui/slider";
+import { RebalanceSettings } from "@shared/schema";
+
+interface AllocationInput {
+  symbol: string;
+  allocation: number;
+}
 
 export function PortfolioRebalance() {
+  const [allocations, setAllocations] = useState<AllocationInput[]>([]);
+  const [threshold, setThreshold] = useState(0.05);
+  const [autoTrade, setAutoTrade] = useState(false);
   const { toast } = useToast();
-  const [targetAllocations, setTargetAllocations] = useState<Record<string, number>>({});
-
-  const { data: portfolio = [], isLoading } = useQuery({
-    queryKey: ["/api/portfolio/assets"],
-  });
+  const queryClient = useQueryClient();
 
   const rebalanceMutation = useMutation({
-    mutationFn: async (allocations: Record<string, number>) => {
-      const response = await fetch("/api/portfolio/rebalance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ allocations })
+    mutationFn: async (settings: RebalanceSettings) => {
+      const response = await fetch('/api/portfolio/rebalance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
       });
-      if (!response.ok) throw new Error("Failed to rebalance portfolio");
+      if (!response.ok) throw new Error('Failed to rebalance portfolio');
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Portfolio Rebalanced",
-        description: "Your portfolio has been successfully rebalanced."
+        title: "Success",
+        description: "Portfolio rebalancing initiated"
+      });
+      queryClient.invalidateQueries(['portfolio']);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to rebalance portfolio",
+        variant: "destructive"
       });
     }
   });
 
   const handleRebalance = () => {
-    rebalanceMutation.mutate(targetAllocations);
-  };
+    const targetAllocations = allocations.reduce((acc, { symbol, allocation }) => {
+      acc[symbol] = allocation / 100;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const updateAllocation = (symbol: string, value: number) => {
-    setTargetAllocations(prev => ({
-      ...prev,
-      [symbol]: value
-    }));
+    rebalanceMutation.mutate({
+      targetAllocations,
+      threshold,
+      autoTrade
+    });
   };
-
-  const totalAllocation = Object.values(targetAllocations).reduce((sum, value) => sum + value, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Asset</TableHead>
-              <TableHead>Current Allocation</TableHead>
-              <TableHead>Target Allocation</TableHead>
-              <TableHead>Change</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {portfolio.map((asset: any) => (
-              <TableRow key={asset.symbol}>
-                <TableCell>{asset.symbol}</TableCell>
-                <TableCell>{asset.allocation}%</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-4">
-                    <Slider
-                      value={[targetAllocations[asset.symbol] || asset.allocation]}
-                      onValueChange={([value]) => updateAllocation(asset.symbol, value)}
-                      max={100}
-                      step={1}
-                    />
-                    <span className="w-12 text-right">
-                      {targetAllocations[asset.symbol] || asset.allocation}%
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {((targetAllocations[asset.symbol] || asset.allocation) - asset.allocation).toFixed(1)}%
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Portfolio Rebalance</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {allocations.map((allocation, index) => (
+            <div key={index} className="flex items-center gap-4">
+              <Input
+                placeholder="Symbol"
+                value={allocation.symbol}
+                onChange={(e) => {
+                  const newAllocations = [...allocations];
+                  newAllocations[index].symbol = e.target.value;
+                  setAllocations(newAllocations);
+                }}
+              />
+              <Input
+                type="number"
+                placeholder="Allocation %"
+                value={allocation.allocation}
+                onChange={(e) => {
+                  const newAllocations = [...allocations];
+                  newAllocations[index].allocation = parseFloat(e.target.value);
+                  setAllocations(newAllocations);
+                }}
+              />
+            </div>
+          ))}
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-slate-500">
-          Total Allocation: {totalAllocation.toFixed(1)}%
-          {totalAllocation !== 100 && (
-            <span className="text-red-500 ml-2">
-              (Must equal 100%)
-            </span>
-          )}
+          <Button
+            variant="outline"
+            onClick={() => setAllocations([...allocations, { symbol: '', allocation: 0 }])}
+          >
+            Add Asset
+          </Button>
+
+          <div className="flex items-center space-x-2 mt-4">
+            <Switch
+              id="auto-trade"
+              checked={autoTrade}
+              onCheckedChange={setAutoTrade}
+            />
+            <Label htmlFor="auto-trade">Auto-execute trades</Label>
+          </div>
+
+          <div className="mt-4">
+            <Label>Rebalance Threshold (%)</Label>
+            <Input
+              type="number"
+              value={threshold * 100}
+              onChange={(e) => setThreshold(parseFloat(e.target.value) / 100)}
+              className="mt-1"
+            />
+          </div>
+
+          <Button 
+            onClick={handleRebalance}
+            disabled={rebalanceMutation.isLoading}
+            className="mt-4"
+          >
+            {rebalanceMutation.isLoading ? 'Rebalancing...' : 'Rebalance Portfolio'}
+          </Button>
         </div>
-        <Button 
-          onClick={handleRebalance}
-          disabled={totalAllocation !== 100 || rebalanceMutation.isPending}
-        >
-          {rebalanceMutation.isPending ? "Rebalancing..." : "Rebalance Portfolio"}
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
-
 export default PortfolioRebalance;
