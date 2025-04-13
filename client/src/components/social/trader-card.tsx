@@ -1,8 +1,11 @@
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, TrendingUp, Users, Star } from "lucide-react";
+import { Users, UserPlus, Star, TrendingUp, Copy } from "lucide-react";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface TraderCardProps {
   trader: {
@@ -13,11 +16,42 @@ interface TraderCardProps {
     followers: number;
     monthlyReturn: number;
     risk: "low" | "moderate" | "high";
+    isFollowing?: boolean;
   };
   onFollow: (id: number) => void;
 }
 
 export function TraderCard({ trader, onFollow }: TraderCardProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isCopying, setIsCopying] = useState(false);
+
+  const copyTradeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/social/copy-trades/${trader.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to copy trades");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: `Now copying ${trader.name}'s trades`
+      });
+      queryClient.invalidateQueries(["traders"]);
+      setIsCopying(true);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to copy trades",
+        variant: "destructive"
+      });
+    }
+  });
+
   const getRiskColor = (risk: string) => {
     switch (risk) {
       case "low":
@@ -46,9 +80,13 @@ export function TraderCard({ trader, onFollow }: TraderCardProps) {
             <span>{trader.followers} followers</span>
           </div>
         </div>
-        <Button onClick={() => onFollow(trader.id)} variant="outline" size="sm">
+        <Button 
+          onClick={() => onFollow(trader.id)} 
+          variant={trader.isFollowing ? "secondary" : "outline"} 
+          size="sm"
+        >
           <UserPlus className="h-4 w-4 mr-2" />
-          Follow
+          {trader.isFollowing ? 'Following' : 'Follow'}
         </Button>
       </CardHeader>
       <CardContent>
@@ -72,7 +110,15 @@ export function TraderCard({ trader, onFollow }: TraderCardProps) {
           <Badge className={getRiskColor(trader.risk)}>
             {trader.risk.charAt(0).toUpperCase() + trader.risk.slice(1)} Risk
           </Badge>
-          <Button variant="ghost" size="sm">View Profile</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => copyTradeMutation.mutate()}
+            disabled={isCopying || copyTradeMutation.isLoading}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            {isCopying ? 'Copying Trades' : 'Copy Trades'}
+          </Button>
         </div>
       </CardContent>
     </Card>

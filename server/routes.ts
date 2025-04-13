@@ -53,3 +53,44 @@ app.get("/api/social/traders/performance", async (req, res) => {
       res.status(500).json({ message: "Failed to unfollow trader" });
     }
   });
+
+  app.post("/api/social/copy-trades/:traderId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const followerId = req.user!.id;
+      const traderId = parseInt(req.params.traderId);
+
+      // Check subscription status
+      const user = await storage.getUser(followerId);
+      if (!user.subscription?.includes('copy_trading')) {
+        return res.status(403).json({ message: "Copy trading requires a premium subscription" });
+      }
+
+      // Enable copy trading
+      await storage.enableCopyTrading(followerId, traderId);
+
+      // Follow trader if not already following
+      const isFollowing = await storage.isFollowing(followerId, traderId);
+      if (!isFollowing) {
+        await storage.followTrader(followerId, traderId);
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to enable copy trading" });
+    }
+  });
+
+  app.delete("/api/social/copy-trades/:traderId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const followerId = req.user!.id;
+      const traderId = parseInt(req.params.traderId);
+      await storage.disableCopyTrading(followerId, traderId);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to disable copy trading" });
+    }
+  });
