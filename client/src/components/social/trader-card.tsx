@@ -24,7 +24,7 @@ interface TraderCardProps {
 export function TraderCard({ trader, onFollow }: TraderCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isCopying, setIsCopying] = useState(false);
+  const [isCopying, setIsCopying] = useState(trader.isCopying || false);
 
   const copyTradeMutation = useMutation({
     mutationFn: async () => {
@@ -47,6 +47,32 @@ export function TraderCard({ trader, onFollow }: TraderCardProps) {
       toast({
         title: "Error",
         description: "Failed to copy trades",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const stopCopyTradeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/social/copy-trades/${trader.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to stop copying trades");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: `Stopped copying ${trader.name}'s trades`
+      });
+      queryClient.invalidateQueries(["traders"]);
+      setIsCopying(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to stop copying trades",
         variant: "destructive"
       });
     }
@@ -111,13 +137,13 @@ export function TraderCard({ trader, onFollow }: TraderCardProps) {
             {trader.risk.charAt(0).toUpperCase() + trader.risk.slice(1)} Risk
           </Badge>
           <Button
-            variant="outline"
+            variant={isCopying ? "destructive" : "outline"}
             size="sm"
-            onClick={() => copyTradeMutation.mutate()}
-            disabled={isCopying || copyTradeMutation.isLoading}
+            onClick={() => isCopying ? stopCopyTradeMutation.mutate() : copyTradeMutation.mutate()}
+            disabled={copyTradeMutation.isLoading || stopCopyTradeMutation.isLoading}
           >
             <Copy className="h-4 w-4 mr-2" />
-            {isCopying ? 'Copying Trades' : 'Copy Trades'}
+            {isCopying ? 'Stop Copying' : 'Copy Trades'}
           </Button>
         </div>
       </CardContent>
