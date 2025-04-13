@@ -12,6 +12,33 @@ export class WebSocketService {
     this.setupWebSocketServer();
   }
 
+  private async startPriceUpdates() {
+    setInterval(async () => {
+      for (const [ws, symbols] of this.clients.entries()) {
+        if (symbols.size > 0) {
+          const updates = await Promise.all(
+            Array.from(symbols).map(async (symbol) => {
+              const data = await marketData.getRealTimeData(symbol);
+              return {
+                symbol,
+                data: {
+                  price: parseFloat(data['Global Quote']['05. price']),
+                  change: parseFloat(data['Global Quote']['09. change']),
+                  volume: parseInt(data['Global Quote']['06. volume'])
+                }
+              };
+            })
+          );
+
+          ws.send(JSON.stringify({
+            type: 'price_update',
+            data: updates
+          }));
+        }
+      }
+    }, 5000); // Update every 5 seconds
+  }
+
   private setupWebSocketServer() {
     this.wss.on('connection', (ws: WebSocket) => {
       this.clients.set(ws, new Set());

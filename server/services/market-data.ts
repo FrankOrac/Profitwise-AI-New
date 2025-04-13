@@ -224,11 +224,30 @@ export class MarketDataService {
     return response.choices[0].message.content;
   }
 
+  // Mock market data for testing
+  private mockPrices: Record<string, number> = {
+    'BTC': 43000,
+    'ETH': 2200,
+    'AAPL': 185,
+    'GOOGL': 140,
+    'MSFT': 330,
+  };
+
   async getRealTimeData(symbol: string) {
-    const response = await fetch(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`
-    );
-    return response.json();
+    // Generate random price fluctuation
+    const basePrice = this.mockPrices[symbol] || 100;
+    const fluctuation = (Math.random() - 0.5) * 2; // -1% to +1%
+    const price = basePrice * (1 + fluctuation / 100);
+    
+    return {
+      'Global Quote': {
+        '01. symbol': symbol,
+        '05. price': price.toFixed(2),
+        '09. change': (fluctuation * basePrice / 100).toFixed(2),
+        '10. change percent': `${fluctuation.toFixed(2)}%`,
+        '06. volume': Math.floor(Math.random() * 1000000)
+      }
+    };
   }
 }
 
