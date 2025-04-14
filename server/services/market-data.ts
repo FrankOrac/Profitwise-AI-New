@@ -1,17 +1,16 @@
 import axios from 'axios';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import { prisma } from '../db';
 
 export class MarketDataService {
   private apiKey = process.env.ALPHA_VANTAGE_API_KEY;
   private baseUrl = 'https://www.alphavantage.co/query';
-  private openai: OpenAIApi;
+  private openai: OpenAI;
 
   constructor() {
-    const configuration = new Configuration({
+    this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-    this.openai = new OpenAIApi(configuration);
   }
 
   async getQuote(symbol: string) {
@@ -223,13 +222,13 @@ export class MarketDataService {
   async generateMarketInsights(marketData: any) {
     const prompt = `Analyze the following market data and provide trading insights:\n${JSON.stringify(marketData)}`;
 
-    const response = await this.openai.createCompletion({
+    const response = await this.openai.completions.create({
       model: "gpt-4",
       prompt,
       max_tokens: 500
     });
 
-    return response.data.choices[0].text;
+    return response.choices[0].text;
   }
 
   async getRiskAssessment(portfolio: any) {
