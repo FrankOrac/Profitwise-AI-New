@@ -1,7 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { Server } from 'http';
 import { verify } from '../auth';
-import { marketDataService } from './market-data';
+import { marketData } from './market-data';
 
 export class WebSocketService {
   private wss: WebSocketServer;
@@ -76,7 +76,7 @@ export class WebSocketService {
     for (const [channel, subscribers] of this.subscriptions.entries()) {
       if (channel.startsWith('price:')) {
         const symbol = channel.split(':')[1];
-        const price = await marketDataService.getPrice(symbol);
+        const price = await marketData.getQuote(symbol);
 
         const message = JSON.stringify({
           type: 'price',
