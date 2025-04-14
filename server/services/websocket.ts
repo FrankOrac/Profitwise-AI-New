@@ -1,43 +1,35 @@
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import { Server } from 'http';
 import { verify } from './auth';
 import { marketDataService } from './market-data';
 
 export class WebSocketService {
-  private wss: WebSocket.Server;
+  private wss: WebSocketServer;
   private subscriptions: Map<string, Set<WebSocket>> = new Map();
 
   constructor(server: Server) {
-    this.wss = new WebSocket.Server({ server });
-    this.setupWebSocket();
-  }
+    this.wss = new WebSocketServer({ server });
 
-  private setupWebSocket() {
-    this.wss.on('connection', async (ws: WebSocket, req) => {
+    this.wss.on('connection', async (ws: any, req: any) => {
       const token = req.url?.split('token=')[1];
       if (!token || !await verify(token)) {
         ws.close();
         return;
       }
+      console.log('Client connected');
 
-      ws.on('message', (data: string) => {
+      ws.on('message', (message: string) => {
         try {
-          const message = JSON.parse(data);
-          switch (message.type) {
-            case 'subscribe':
-              this.subscribe(message.channel, ws);
-              break;
-            case 'unsubscribe':
-              this.unsubscribe(message.channel, ws);
-              break;
-          }
-        } catch (error) {
-          console.error('WebSocket message error:', error);
+          const data = JSON.parse(message);
+          this.handleMessage(ws, data);
+        } catch (err) {
+          console.error('Invalid message format:', err);
         }
       });
 
       ws.on('close', () => {
         this.removeSubscriber(ws);
+        console.log('Client disconnected');
       });
     });
 
@@ -45,6 +37,22 @@ export class WebSocketService {
     setInterval(() => {
       this.broadcastPriceUpdates();
     }, 1000);
+  }
+
+  private handleMessage(ws: any, data: any) {
+    // Handle different message types
+    switch (data.type) {
+      case 'subscribe':
+        this.subscribe(data.channel, ws);
+        console.log('Client subscribed to:', data.channel);
+        break;
+      case 'unsubscribe':
+        this.unsubscribe(data.channel, ws);
+        console.log('Client unsubscribed from:', data.channel);
+        break;
+      default:
+        console.log('Unknown message type:', data.type);
+    }
   }
 
   private subscribe(channel: string, ws: WebSocket) {
@@ -84,8 +92,12 @@ export class WebSocketService {
       }
     }
   }
-}
 
-export const createWebSocketService = (server: Server) => {
-  return new WebSocketService(server);
-};
+  public broadcast(channel: string, data: any) {
+    this.wss.clients.forEach((client) => {
+      if (client.readyState === 1) { // OPEN
+        client.send(JSON.stringify({ channel, data }));
+      }
+    });
+  }
+}
