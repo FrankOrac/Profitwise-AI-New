@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .alert { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .price { font-size: 28px; font-weight: bold; color: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Price Alert: <%= alert.symbol %></h2>
+    <div class="alert">
+      <p><%= alert.condition %></p>
+      <div class="price">$<%= alert.price.toFixed(2) %></div>
+      <p>Triggered at: <%= new Date().toLocaleString() %></p>
+    </div>
+    <p>
+      <small>This alert was triggered based on your price alert settings. To modify your alerts, visit your dashboard.</small>
+    </p>
+  </div>
+</body>
+</html>
