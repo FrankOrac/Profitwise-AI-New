@@ -2,6 +2,7 @@
 # ProfitWise AI Trading Platform
 
 A modern web application for AI-powered trading insights and portfolio management.
+ProfitWise AI is an advanced AI-powered financial advisor platform that revolutionizes trading and investment decisions. By integrating with Web3 wallets and leveraging cutting-edge AI technology, we provide real-time, data-driven investment insights tailored to market trends and individual user behavior.
 
 ## Features
 
@@ -14,6 +15,14 @@ A modern web application for AI-powered trading insights and portfolio managemen
 - 🔒 Secure authentication system
 - ⚙️ Advanced admin controls
 - 📱 Responsive design
+- Real-time market analysis and predictions
+Web3 wallet integration
+Personalized investment recommendations
+Advanced portfolio management
+Subscription-based premium features
+API access for institutional clients
+Social trading capabilities
+Educational content and resources
 
 ## Tech Stack
 
