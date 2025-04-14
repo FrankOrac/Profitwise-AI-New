@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws';
 import { Server } from 'http';
-import { verify } from './auth';
+import { verify } from '../auth';
 import { marketDataService } from './market-data';
 
 export class WebSocketService {
