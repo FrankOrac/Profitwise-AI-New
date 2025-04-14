@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardContent } from '../ui/card';
 
-export function PortfolioRebalance() {
+export default function PortfolioRebalance() {
   const [allocations, setAllocations] = useState<Record<string, number>>({});
 
   const rebalanceMutation = useMutation({
