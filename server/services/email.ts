@@ -1,7 +1,7 @@
+
 import nodemailer from 'nodemailer';
 import ejs from 'ejs';
 import path from 'path';
-import fs from 'fs';
 
 export class EmailService {
   private transporter: nodemailer.Transporter;
@@ -18,34 +18,29 @@ export class EmailService {
     });
   }
 
-  async sendTradeAlert(userEmail: string, alert: any) {
-    const template = await this.loadTemplate('trade-alert');
-    const html = ejs.render(template, { alert });
+  async sendTradeAlert(user: any, trade: any) {
+    const template = await ejs.renderFile(
+      path.join(__dirname, '../emails/trade-alert/html.ejs'),
+      { trade }
+    );
 
     await this.transporter.sendMail({
-      from: process.env.SMTP_FROM,
-      to: userEmail,
+      to: user.email,
       subject: 'Trade Alert',
-      html
+      html: template
     });
   }
 
-  async sendPortfolioUpdate(userEmail: string, portfolio: any) {
-    const template = await this.loadTemplate('portfolio-update');
-    const html = ejs.render(template, { portfolio });
+  async sendPortfolioUpdate(user: any, portfolio: any) {
+    const template = await ejs.renderFile(
+      path.join(__dirname, '../emails/portfolio-update/html.ejs'),
+      { portfolio }
+    );
 
     await this.transporter.sendMail({
-      from: process.env.SMTP_FROM,
-      to: userEmail,
+      to: user.email,
       subject: 'Portfolio Update',
-      html
+      html: template
     });
-  }
-
-  private async loadTemplate(name: string): Promise<string> {
-    const templatePath = path.join(__dirname, '../emails', name, 'html.ejs');
-    return fs.promises.readFile(templatePath, 'utf8');
   }
 }
-
-export const emailService = new EmailService();

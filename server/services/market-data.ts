@@ -1,24 +1,21 @@
 import axios from 'axios';
-import { technicalAnalysis } from '@mathieuc/tradingview';
-import OpenAI from 'openai';
-import { storage } from '../storage';
+import { Configuration, OpenAIApi } from 'openai';
+import { prisma } from '../db';
 
 export class MarketDataService {
   private apiKey = process.env.ALPHA_VANTAGE_API_KEY;
   private baseUrl = 'https://www.alphavantage.co/query';
-  private openai: OpenAI;
+  private openai: OpenAIApi;
 
   constructor() {
-    if (process.env.OPENAI_API_KEY) {
-      this.openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    }
+    const configuration = new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    this.openai = new OpenAIApi(configuration);
   }
 
   async getQuote(symbol: string) {
     if (!this.apiKey) {
-      // Use mock data if API key is not available
       const mockPrice = this.mockPrices[symbol] || 100;
       return {
         symbol,
@@ -28,7 +25,7 @@ export class MarketDataService {
         volume: Math.floor(Math.random() * 1000000)
       };
     }
-    
+
     try {
       const response = await axios.get(this.baseUrl, {
         params: {
@@ -59,7 +56,6 @@ export class MarketDataService {
         this.getHistoricalData(symbol)
       ]);
 
-      // Calculate advanced technical indicators
       const prices = history.map(day => day.close);
       const sma20 = this.calculateSMA(prices, 20);
       const sma50 = this.calculateSMA(prices, 50);
@@ -67,7 +63,6 @@ export class MarketDataService {
       const macd = this.calculateMACD(prices);
       const volatility = this.calculateVolatility(prices, 20);
 
-      // Generate trading signals
       const signals = {
         trend: quote.price > sma20 ? 'upward' : 'downward',
         strength: rsi > 70 ? 'overbought' : rsi < 30 ? 'oversold' : 'neutral',
@@ -162,7 +157,6 @@ export class MarketDataService {
 
       const openaiInsights = await this.generateMarketInsights(analyses);
 
-
       return analyses.map((analysis, index) => {
         const asset = portfolio[index];
         const signals = analysis.signals;
@@ -226,21 +220,28 @@ export class MarketDataService {
     }
   }
 
-  async generateMarketInsights(data: any) {
-    if (!this.openai) {
-      return "AI insights unavailable - OpenAI API key not configured";
-    }
+  async generateMarketInsights(marketData: any) {
+    const prompt = `Analyze the following market data and provide trading insights:\n${JSON.stringify(marketData)}`;
 
-    const prompt = `Analyze this market data and provide trading insights:
-      ${JSON.stringify(data)}`;
-
-    const response = await this.openai.chat.completions.create({
+    const response = await this.openai.createCompletion({
       model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
+      prompt,
+      max_tokens: 500
     });
 
-    return response.choices[0].message.content;
+    return response.data.choices[0].text;
   }
+
+  async getRiskAssessment(portfolio: any) {
+    const analysis = await this.openai.createCompletion({
+      model: "gpt-4",
+      prompt: `Assess the risk level for this portfolio:\n${JSON.stringify(portfolio)}`,
+      max_tokens: 300
+    });
+
+    return analysis.data.choices[0].text;
+  }
+
 
   // Mock market data for testing
   private mockPrices: Record<string, number> = {
@@ -252,11 +253,10 @@ export class MarketDataService {
   };
 
   async getRealTimeData(symbol: string) {
-    // Generate random price fluctuation
     const basePrice = this.mockPrices[symbol] || 100;
-    const fluctuation = (Math.random() - 0.5) * 2; // -1% to +1%
+    const fluctuation = (Math.random() - 0.5) * 2; 
     const price = basePrice * (1 + fluctuation / 100);
-    
+
     return {
       'Global Quote': {
         '01. symbol': symbol,
