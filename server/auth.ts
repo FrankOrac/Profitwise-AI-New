@@ -36,6 +36,15 @@ export const authenticateUser = (req: Express.Request, res: Express.Response, ne
   next();
 };
 
+export const verify = async (token: string) => {
+  try {
+    // Implement token verification logic
+    return true; // For now, accept all tokens
+  } catch (error) {
+    return false;
+  }
+};
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "profitwise-ai-secret",
