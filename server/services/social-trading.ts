@@ -1,205 +1,110 @@
-import { storage } from '../storage';
+import { prisma } from '../db';
 import { marketData } from './market-data';
 import { emailService } from './email';
-
-export interface Trade {
-  id: string;
-  userId: string;
-  symbol: string;
-  type: 'buy' | 'sell';
-  amount: number;
-  price: number;
-  timestamp: Date;
-}
+import { TradeSignal, CopyTrade } from '@shared/schema';
 
 export class SocialTradingService {
-  async createPost(userId: string, data: any) {
-    const post = await storage.createTradePost({
-      ...data,
-      userId,
-      timestamp: new Date()
-    });
-
-    // Get market data for the asset
-    const quote = await marketData.getQuote(data.symbol);
-
-    // Store entry price for future P&L calculation
-    await storage.saveTradeEntry({
-      postId: post.id,
-      price: quote.price,
-      timestamp: new Date()
-    });
-
-    return post;
-  }
-
-  async copyTrade(followerId: string, postId: number) {
-    const post = await storage.getTradePostById(postId);
-    if (!post) throw new Error('Trade not found');
-
-    // Check if user has sufficient balance
-    const user = await storage.getUser(followerId);
-    const quote = await marketData.getQuote(post.symbol);
-
-    const copyTrade = await storage.executeCopyTrade({
-      followerId,
-      traderId: post.userId,
-      postId,
-      symbol: post.symbol,
-      action: post.action,
-      position: post.position,
-      entryPrice: quote.price,
-      timestamp: new Date()
-    });
-
-    // Notify original trader
-    const trader = await storage.getUser(post.userId);
-    await emailService.sendEmail(trader.email, 'trade-copied', {
-      trader,
-      trade: post
-    });
-
-    return copyTrade;
-  }
-
-  async notifyFollowers(traderId: string, trade: any) {
-    const followers = await storage.getTraderFollowers(traderId);
-    const trader = await storage.getUser(traderId);
-    const analysis = await marketData.analyzeMarketData(trade.symbol);
-    const quote = await marketData.getQuote(trade.symbol);
-
-    const tradeDetails = {
-      symbol: trade.symbol,
-      type: trade.action,
-      price: quote.price,
-      confidence: analysis.signals.strength,
-      riskLevel: analysis.riskLevel,
-      expectedReturn: analysis.expectedReturn,
-      stopLoss: quote.price * 0.95, // 5% stop loss
-      takeProfit: quote.price * 1.15 // 15% take profit
-    };
-
-    // Send notifications to all followers
-    await Promise.all(followers.map(follower =>
-      emailService.sendEmail(follower.email, 'trade-alert', {
-        trader: trader.name,
-        trade: tradeDetails,
-        analysis: `${trader.name} has opened a new ${trade.action} position in ${trade.symbol}`,
-        dashboardUrl: `${process.env.APP_URL}/social-trading`
-      })
-    ));
-
-    // Store the trade alert for in-app notifications
-    await storage.createTradeAlert({
-      traderId,
-      followers: followers.map(f => f.id),
-      trade: tradeDetails,
-      timestamp: new Date()
-    });
-  }
-
-  async sendPerformanceUpdates() {
-    const traders = await storage.getAllTraders();
-
-    for (const trader of traders) {
-      const stats = await this.getTraderStats(trader.id);
-      const followers = await storage.getTraderFollowers(trader.id);
-
-      if (followers.length > 0) {
-        await Promise.all(followers.map(follower =>
-          emailService.sendEmail(follower.email, 'portfolio-update', {
-            totalValue: stats.performance,
-            dailyChange: stats.winRate,
-            topPerformer: {
-              symbol: trader.topSymbol,
-              change: stats.performance
-            },
-            dashboardUrl: `${process.env.APP_URL}/social-trading/${trader.id}`
-          })
-        ));
+  async publishTradeSignal(userId: number, signal: TradeSignal) {
+    const trade = await prisma.tradeSignal.create({
+      data: {
+        userId,
+        symbol: signal.symbol,
+        type: signal.type,
+        entry: signal.entry,
+        target: signal.target,
+        stopLoss: signal.stopLoss,
+        analysis: signal.analysis,
+        timestamp: new Date()
       }
-    }
-  }
-
-  async getTraderStats(traderId: string) {
-    const trades = await storage.getTraderTrades(traderId);
-    const followers = await storage.getTraderFollowers(traderId);
-
-    let winCount = 0;
-    let totalPnL = 0;
-
-    for (const trade of trades) {
-      const quote = await marketData.getQuote(trade.symbol);
-      const pnl = (quote.price - trade.entryPrice) * trade.position;
-
-      if (pnl > 0) winCount++;
-      totalPnL += pnl;
-    }
-
-    return {
-      totalTrades: trades.length,
-      winRate: (winCount / trades.length) * 100,
-      performance: (totalPnL / trades.length).toFixed(2),
-      followers: followers.length
-    };
-  }
-
-  async enableCopyTrading(followerId: string, traderId: string, riskPercentage: number = 10) {
-    // Validate subscription
-    const follower = await storage.getUser(followerId);
-    if (!follower.subscriptionTier.includes('copy_trading')) {
-      throw new Error('Copy trading requires a premium subscription');
-    }
-
-    // Create or update copy settings
-    await storage.saveCopySettings({
-      followerId,
-      traderId,
-      riskPercentage,
-      enabled: true
     });
-  }
 
-  async executeCopyTrade(traderId: string, tradeDetails: any) {
-    const copySettings = await storage.getCopyTraderSettings(traderId);
-
-    for (const setting of copySettings) {
-      if (!setting.enabled) continue;
-
-      const followerBalance = await storage.getAccountBalance(setting.followerId);
-      const tradeAmount = (followerBalance * setting.riskPercentage) / 100;
-
-      await storage.executeMarketOrder({
-        userId: setting.followerId,
-        symbol: tradeDetails.symbol,
-        action: tradeDetails.action,
-        amount: tradeAmount,
-        price: tradeDetails.price
+    const followers = await this.getTraderFollowers(userId);
+    for (const follower of followers) {
+      await emailService.sendTradeAlert(follower, {
+        action: signal.type,
+        symbol: signal.symbol,
+        price: signal.entry,
+        analysis: signal.analysis
       });
     }
+
+    return trade;
   }
 
-  async followTrader(followerId: string, traderId: string) {
-    await storage.db.insert('follows').values({
-      followerId,
-      traderId,
-      createdAt: new Date()
+  async followTrader(followerId: number, traderId: number) {
+    await prisma.traderFollower.create({
+      data: {
+        followerId,
+        traderId
+      }
     });
   }
 
-  async unfollowTrader(followerId: string, traderId: string) {
-    await storage.db.delete('follows')
-      .where('followerId = ? AND traderId = ?', [followerId, traderId]);
+  async unfollowTrader(followerId: number, traderId: number) {
+    await prisma.traderFollower.delete({
+      where: {
+        followerId_traderId: {
+          followerId,
+          traderId
+        }
+      }
+    });
   }
 
+  async getTraderFollowers(traderId: number) {
+    const followers = await prisma.traderFollower.findMany({
+      where: { traderId },
+      include: { follower: true }
+    });
+    return followers.map(f => f.follower);
+  }
 
-  private calculateStats(trades: Trade[]) {
-    // Calculate win rate, profit factor, etc.
+  async getTraderPerformance(traderId: number) {
+    const signals = await prisma.tradeSignal.findMany({
+      where: { userId: traderId }
+    });
+
+    let winCount = 0;
+    let totalReturn = 0;
+
+    for (const signal of signals) {
+      const currentPrice = await marketData.getQuote(signal.symbol);
+      const pnl = signal.type === 'buy'
+        ? currentPrice.price - signal.entry
+        : signal.entry - currentPrice.price;
+
+      if (pnl > 0) winCount++;
+      totalReturn += pnl;
+    }
+
     return {
-      totalTrades: trades.length,
-      winRate: 0.65, // Implement actual calculation
-      profitFactor: 1.5 // Implement actual calculation
+      winRate: signals.length > 0 ? (winCount / signals.length) * 100 : 0,
+      totalReturn,
+      signalCount: signals.length
     };
+  }
+
+  async getTopTraders() {
+    const traders = await prisma.user.findMany({
+      where: { role: 'TRADER' },
+      include: {
+        tradeSignals: true,
+        followers: true
+      }
+    });
+
+    const tradersWithPerformance = await Promise.all(
+      traders.map(async (trader) => {
+        const performance = await this.getTraderPerformance(trader.id);
+        return {
+          ...trader,
+          ...performance,
+          followerCount: trader.followers.length
+        };
+      })
+    );
+
+    return tradersWithPerformance.sort((a, b) => b.totalReturn - a.totalReturn);
   }
 }
 
