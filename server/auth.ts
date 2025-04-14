@@ -137,36 +137,41 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    console.log("Login attempt for username:", req.body.username);
-    
-    if (!req.body.username || !req.body.password) {
-      return res.status(400).json({ message: "Username and password are required" });
-    }
-
-    passport.authenticate("local", async (err, user, info) => {
-      if (err) {
-        console.error("Login error:", err);
-        return res.status(500).json({ message: "Internal server error" });
-      }
+    try {
+      console.log("Login attempt for username:", req.body.username);
       
-      if (!user) {
-        return res.status(401).json({ message: "Invalid username or password" });
+      if (!req.body.username || !req.body.password) {
+        return res.status(400).json({ message: "Username and password are required" });
       }
 
-      req.login(user, (err) => {
+      passport.authenticate("local", (err, user, info) => {
         if (err) {
-          console.error("Session error:", err);
-          return res.status(500).json({ message: "Failed to create session" });
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Internal server error" });
         }
         
-        return res.json({
-          id: user.id,
-          username: user.username,
-          email: user.email,
+        if (!user) {
+          return res.status(401).json({ message: "Invalid username or password" });
+        }
+
+        req.login(user, (loginErr) => {
+          if (loginErr) {
+            console.error("Session error:", loginErr);
+            return res.status(500).json({ message: "Failed to create session" });
+          }
+          
+          return res.json({
+            id: user.id,
+            username: user.username,
+            email: user.email,
           role: user.role
         });
       });
     })(req, res, next);
+    } catch (error) {
+      console.error("Unexpected login error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
+    }
   });
 
   app.post("/api/logout", (req, res, next) => {
