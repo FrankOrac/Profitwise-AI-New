@@ -1,5 +1,6 @@
-
 import { useQuery } from "@tanstack/react-query";
+import { useWebSocket } from "./use-websocket";
+import { useEffect } from "react";
 
 interface MarketData {
   price: number;
@@ -8,8 +9,11 @@ interface MarketData {
 }
 
 export function useMarketData(symbol: string) {
-  return useQuery<MarketData>({
-    queryKey: ["market", symbol],
+  const ws = useWebSocket();
+
+  const { data, refetch } = useQuery<MarketData>({
+    queryKey: ["/api/market-data", symbol],
+    staleTime: 30000,
     queryFn: async () => {
       const response = await fetch(`/api/market-data/${symbol}`);
       if (!response.ok) {
@@ -22,6 +26,33 @@ export function useMarketData(symbol: string) {
         volume24h: data.volume
       };
     },
-    refetchInterval: 30000 // Refresh every 30 seconds
   });
+
+  useEffect(() => {
+    if (!ws) return;
+
+    ws.send(JSON.stringify({
+      type: "subscribe",
+      channel: `price:${symbol}`,
+    }));
+
+    const handleMessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "price" && data.symbol === symbol) {
+        refetch();
+      }
+    };
+
+    ws.addEventListener("message", handleMessage);
+
+    return () => {
+      ws.send(JSON.stringify({
+        type: "unsubscribe",
+        channel: `price:${symbol}`,
+      }));
+      ws.removeEventListener("message", handleMessage);
+    };
+  }, [ws, symbol, refetch]);
+
+  return { data };
 }

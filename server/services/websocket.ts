@@ -1,30 +1,34 @@
-import { WebSocket, WebSocketServer } from 'ws';
+import WebSocket from 'ws';
 import { Server } from 'http';
-import { marketData } from './market-data';
+import { verify } from './auth';
+import { marketDataService } from './market-data';
 
 export class WebSocketService {
-  private wss: WebSocketServer;
-  private clients: Map<WebSocket, Set<string>> = new Map();
+  private wss: WebSocket.Server;
+  private subscriptions: Map<string, Set<WebSocket>> = new Map();
 
   constructor(server: Server) {
-    this.wss = new WebSocketServer({ server });
-    this.setupWebSocketServer();
+    this.wss = new WebSocket.Server({ server });
+    this.setupWebSocket();
   }
 
-  private setupWebSocketServer() {
-    this.wss.on('connection', (ws: WebSocket) => {
-      this.clients.set(ws, new Set());
+  private setupWebSocket() {
+    this.wss.on('connection', async (ws: WebSocket, req) => {
+      const token = req.url?.split('token=')[1];
+      if (!token || !await verify(token)) {
+        ws.close();
+        return;
+      }
 
-      ws.on('message', async (message: string) => {
+      ws.on('message', (data: string) => {
         try {
-          const data = JSON.parse(message.toString());
-
-          switch (data.type) {
+          const message = JSON.parse(data);
+          switch (message.type) {
             case 'subscribe':
-              this.handleSubscribe(ws, data.symbols);
+              this.subscribe(message.channel, ws);
               break;
             case 'unsubscribe':
-              this.handleUnsubscribe(ws, data.symbols);
+              this.unsubscribe(message.channel, ws);
               break;
           }
         } catch (error) {
@@ -33,48 +37,55 @@ export class WebSocketService {
       });
 
       ws.on('close', () => {
-        this.clients.delete(ws);
+        this.removeSubscriber(ws);
       });
     });
 
-    this.startPriceUpdates();
+    // Start price updates
+    setInterval(() => {
+      this.broadcastPriceUpdates();
+    }, 1000);
   }
 
-  private handleSubscribe(ws: WebSocket, symbols: string[]) {
-    const subscriptions = this.clients.get(ws);
-    if (subscriptions) {
-      symbols.forEach(symbol => subscriptions.add(symbol));
+  private subscribe(channel: string, ws: WebSocket) {
+    if (!this.subscriptions.has(channel)) {
+      this.subscriptions.set(channel, new Set());
+    }
+    this.subscriptions.get(channel)?.add(ws);
+  }
+
+  private unsubscribe(channel: string, ws: WebSocket) {
+    this.subscriptions.get(channel)?.delete(ws);
+  }
+
+  private removeSubscriber(ws: WebSocket) {
+    for (const subscribers of this.subscriptions.values()) {
+      subscribers.delete(ws);
     }
   }
 
-  private handleUnsubscribe(ws: WebSocket, symbols: string[]) {
-    const subscriptions = this.clients.get(ws);
-    if (subscriptions) {
-      symbols.forEach(symbol => subscriptions.delete(symbol));
-    }
-  }
+  private async broadcastPriceUpdates() {
+    for (const [channel, subscribers] of this.subscriptions.entries()) {
+      if (channel.startsWith('price:')) {
+        const symbol = channel.split(':')[1];
+        const price = await marketDataService.getPrice(symbol);
 
-  private async startPriceUpdates() {
-    setInterval(async () => {
-      for (const [ws, symbols] of this.clients.entries()) {
-        if (symbols.size > 0) {
-          try {
-            const updates = await Promise.all(
-              Array.from(symbols).map(async symbol => ({
-                symbol,
-                data: await marketData.getRealTimeData(symbol)
-              }))
-            );
+        const message = JSON.stringify({
+          type: 'price',
+          symbol,
+          price
+        });
 
-            ws.send(JSON.stringify({
-              type: 'price_update',
-              data: updates
-            }));
-          } catch (error) {
-            console.error('Price update error:', error);
+        subscribers.forEach(ws => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(message);
           }
-        }
+        });
       }
-    }, 5000);
+    }
   }
 }
+
+export const createWebSocketService = (server: Server) => {
+  return new WebSocketService(server);
+};

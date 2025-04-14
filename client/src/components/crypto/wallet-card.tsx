@@ -193,16 +193,36 @@ export function WalletCard() {
           </div>
         </>
       ) : (
-        <Button 
-          onClick={() => connectMutation.mutate()}
-          disabled={connectMutation.isPending}
-          className="w-full"
-        >
-          {connectMutation.isPending && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
-          Connect Wallet
-        </Button>
+        <>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-500">Connect your wallet to start managing your crypto assets.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <Button 
+                onClick={() => connectMutation.mutate({ type: 'metamask' })}
+                disabled={connectMutation.isPending}
+                className="w-full"
+              >
+                {connectMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <img src="/metamask.svg" alt="MetaMask" className="h-4 w-4 mr-2" />
+                    MetaMask
+                  </>
+                )}
+              </Button>
+              <Button 
+                onClick={() => connectMutation.mutate({ type: 'walletconnect' })}
+                disabled={connectMutation.isPending}
+                variant="outline"
+                className="w-full"
+              >
+                <img src="/walletconnect.svg" alt="WalletConnect" className="h-4 w-4 mr-2" />
+                WalletConnect
+              </Button>
+            </div>
+          </div>
+        </>
       )}
     </Card>
   );
