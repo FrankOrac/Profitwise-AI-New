@@ -1,8 +1,9 @@
-import { prisma } from '../db';
+import { db } from '../db';
 import { MarketDataService } from './market-data';
-import { Portfolio, Asset, RebalanceSettings } from '@shared/schema';
+import { portfolioAssets } from '@shared/schema';
 import { storage } from '../storage';
 import { emailService } from './email';
+import { eq } from 'drizzle-orm';
 
 export class PortfolioService {
   private marketData: MarketDataService;
@@ -11,32 +12,30 @@ export class PortfolioService {
     this.marketData = new MarketDataService();
   }
 
-  async rebalancePortfolio(portfolioId: string, settings: RebalanceSettings) {
-    const portfolio = await prisma.portfolio.findUnique({
-      where: { id: portfolioId },
-      include: { positions: true }
-    });
+  async rebalancePortfolio(portfolioId: string, settings: any) {
+    const portfolio = await db.select().from(portfolioAssets)
+      .where(eq(portfolioAssets.id, parseInt(portfolioId)))
+      .execute();
 
-    if (!portfolio) {
+    if (!portfolio.length) {
       throw new Error(`Portfolio with ID ${portfolioId} not found`);
     }
 
-    const trades = this.calculateRebalanceTrades(portfolio, settings.targetAllocations);
+    const trades = this.calculateRebalanceTrades(portfolio[0], settings.targetAllocations);
 
+    // Record trades using storage
     for (const trade of trades) {
-      await prisma.transaction.create({
-        data: {
-          portfolioId,
-          type: trade.type,
-          amount: trade.amount,
-          asset: trade.asset,
-          timestamp: new Date()
-        }
+      await storage.recordTrade(parseInt(portfolioId), {
+        symbol: trade.asset,
+        type: trade.type,
+        quantity: trade.amount,
+        price: trade.price,
+        timestamp: new Date()
       });
     }
 
-    // Send notification -  using existing emailService
-    await emailService.sendPortfolioUpdate(parseInt(portfolioId.split('-')[1]), { // Assuming portfolioId format includes userId
+    // Send notification using existing emailService
+    await emailService.sendPortfolioUpdate(parseInt(portfolioId), {
       type: 'rebalance',
       trades,
       newAllocations: settings.targetAllocations
@@ -46,40 +45,24 @@ export class PortfolioService {
   }
 
   private calculateRebalanceTrades(portfolio: any, targetAllocations: any): any[] {
-    // Implementation of rebalancing logic -  combining logic from original
     const trades: any[] = [];
-    const totalValue = portfolio.positions.reduce((sum, asset) => sum + (asset.quantity * asset.currentPrice), 0);
+    const totalValue = portfolio.value || 0;
 
-    for (const asset of portfolio.positions) {
-      const currentAllocation = (asset.quantity * asset.currentPrice) / totalValue;
-      const targetAllocation = targetAllocations[asset.symbol] || 0;
-      const difference = targetAllocation - currentAllocation;
+    for (const [symbol, targetAllocation] of Object.entries(targetAllocations)) {
+      const currentAllocation = (portfolio.quantity * portfolio.currentPrice) / totalValue;
+      const difference = (targetAllocation as number) - currentAllocation;
 
-      if (Math.abs(difference) > 0.05) { //Using a threshold of 5% for simplicity.  Consider settings.threshold if needed
+      if (Math.abs(difference) > 0.05) {
         const tradeAmount = difference * totalValue;
-        const tradeQuantity = Math.abs(tradeAmount / asset.currentPrice);
-
         trades.push({
-          asset: asset.symbol,
+          asset: symbol,
           type: difference > 0 ? 'buy' : 'sell',
-          amount: tradeAmount
+          amount: Math.abs(tradeAmount),
+          price: portfolio.currentPrice
         });
       }
     }
     return trades;
-  }
-
-
-  private async executeTrade(userId: number, trade: any) {
-    // This method is now obsolete due to the direct use of Prisma in rebalancePortfolio.
-    // Keeping it for potential future use or expansion.
-    await storage.recordTrade(userId, {
-      symbol: trade.symbol,
-      type: trade.type,
-      quantity: trade.quantity,
-      price: trade.price,
-      timestamp: new Date()
-    });
   }
 
   async getRebalanceSuggestions(userId: number) {
