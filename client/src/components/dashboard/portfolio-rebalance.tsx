@@ -1,131 +1,57 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { RebalanceSettings } from "@shared/schema";
-
-interface AllocationInput {
-  symbol: string;
-  allocation: number;
-}
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Card, CardContent } from '../ui/card';
 
 export function PortfolioRebalance() {
-  const [allocations, setAllocations] = useState<AllocationInput[]>([]);
-  const [threshold, setThreshold] = useState(0.05);
-  const [autoTrade, setAutoTrade] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [allocations, setAllocations] = useState<Record<string, number>>({});
 
   const rebalanceMutation = useMutation({
-    mutationFn: async (settings: RebalanceSettings) => {
+    mutationFn: async (data: Record<string, number>) => {
       const response = await fetch('/api/portfolio/rebalance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
+        body: JSON.stringify(data)
       });
       if (!response.ok) throw new Error('Failed to rebalance portfolio');
       return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Portfolio rebalancing initiated"
-      });
-      queryClient.invalidateQueries(['portfolio']);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to rebalance portfolio",
-        variant: "destructive"
-      });
     }
   });
 
-  const handleRebalance = () => {
-    const targetAllocations = allocations.reduce((acc, { symbol, allocation }) => {
-      acc[symbol] = allocation / 100;
-      return acc;
-    }, {} as Record<string, number>);
-
-    rebalanceMutation.mutate({
-      targetAllocations,
-      threshold,
-      autoTrade
-    });
-  };
-
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Portfolio Rebalance</CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
+        <h3 className="font-medium mb-4">Portfolio Rebalancing</h3>
+
         <div className="space-y-4">
-          {allocations.map((allocation, index) => (
-            <div key={index} className="flex items-center gap-4">
-              <Input
-                placeholder="Symbol"
-                value={allocation.symbol}
-                onChange={(e) => {
-                  const newAllocations = [...allocations];
-                  newAllocations[index].symbol = e.target.value;
-                  setAllocations(newAllocations);
-                }}
-              />
-              <Input
-                type="number"
-                placeholder="Allocation %"
-                value={allocation.allocation}
-                onChange={(e) => {
-                  const newAllocations = [...allocations];
-                  newAllocations[index].allocation = parseFloat(e.target.value);
-                  setAllocations(newAllocations);
-                }}
-              />
-            </div>
-          ))}
-
-          <Button
-            variant="outline"
-            onClick={() => setAllocations([...allocations, { symbol: '', allocation: 0 }])}
-          >
-            Add Asset
-          </Button>
-
-          <div className="flex items-center space-x-2 mt-4">
-            <Switch
-              id="auto-trade"
-              checked={autoTrade}
-              onCheckedChange={setAutoTrade}
-            />
-            <Label htmlFor="auto-trade">Auto-execute trades</Label>
-          </div>
-
-          <div className="mt-4">
-            <Label>Rebalance Threshold (%)</Label>
+          <div className="grid grid-cols-2 gap-4">
             <Input
+              placeholder="BTC allocation (%)"
               type="number"
-              value={threshold * 100}
-              onChange={(e) => setThreshold(parseFloat(e.target.value) / 100)}
-              className="mt-1"
+              onChange={(e) => setAllocations(prev => ({
+                ...prev,
+                BTC: Number(e.target.value)
+              }))}
+            />
+            <Input
+              placeholder="ETH allocation (%)"
+              type="number"
+              onChange={(e) => setAllocations(prev => ({
+                ...prev,
+                ETH: Number(e.target.value)
+              }))}
             />
           </div>
 
           <Button 
-            onClick={handleRebalance}
-            disabled={rebalanceMutation.isLoading}
-            className="mt-4"
+            onClick={() => rebalanceMutation.mutate(allocations)}
+            disabled={rebalanceMutation.isPending}
           >
-            {rebalanceMutation.isLoading ? 'Rebalancing...' : 'Rebalance Portfolio'}
+            Rebalance Portfolio
           </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
-export default PortfolioRebalance;
