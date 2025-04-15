@@ -113,7 +113,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!userChartRef.current) return;
-    
+
     const setupChart = async () => {
       if (userChartInstance) {
         userChartInstance.destroy();
@@ -174,11 +174,11 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let chartInstance: any = null;
-    
+
     const setupChart = async () => {
       const canvas = revenueChartRef.current;
       if (!canvas) return;
-      
+
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
       if (existingChart) {
         existingChart.destroy();
       }
-      
+
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -338,6 +338,32 @@ export default function AdminDashboard() {
                     View All
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <Card>
+                    <CardContent className="p-6">
+                      <h3 className="font-medium mb-2">Total Users</h3>
+                      <div className="text-3xl font-bold">2,543</div>
+                      <div className="text-sm text-success mt-2">+12% this month</div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <h3 className="font-medium mb-2">Active Traders</h3>
+                      <div className="text-3xl font-bold">1,257</div>
+                      <div className="text-sm text-success mt-2">+8% this month</div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <h3 className="font-medium mb-2">Trading Volume</h3>
+                      <div className="text-3xl font-bold">$1.2M</div>
+                      <div className="text-sm text-success mt-2">+15% this month</div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 <div className="space-y-4">

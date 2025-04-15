@@ -270,6 +270,39 @@ export default function EducationPage() {
             {/* Upcoming Live Webinars */}
             {!searchQuery && activeTab === "all" && !difficultyFilter && !durationFilter && (
               <div className="mb-8">
+                <h2 className="text-lg font-bold mb-6">Interactive Tutorials</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <Badge>Beginner</Badge>
+                        <div className="text-sm text-slate-500">15 mins</div>
+                      </div>
+                      <h3 className="font-bold text-lg mb-2">Getting Started with Trading</h3>
+                      <p className="text-slate-600 mb-4">Learn the basics of trading and portfolio management.</p>
+                      <div className="flex justify-between items-center">
+                        <Progress value={0} className="w-32" />
+                        <Button>Start</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <Badge>Intermediate</Badge>
+                        <div className="text-sm text-slate-500">20 mins</div>
+                      </div>
+                      <h3 className="font-bold text-lg mb-2">Technical Analysis</h3>
+                      <p className="text-slate-600 mb-4">Master chart patterns and technical indicators.</p>
+                      <div className="flex justify-between items-center">
+                        <Progress value={0} className="w-32" />
+                        <Button>Start</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
                 <h2 className="text-lg font-bold mb-6">Upcoming Live Webinars</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <Card>
