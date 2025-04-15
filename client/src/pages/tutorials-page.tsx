@@ -291,7 +291,16 @@ function TutorialCard({ tutorial }: { tutorial: Tutorial }) {
   return (
     <Card>
       <div className="aspect-video bg-slate-100 flex items-center justify-center relative">
-        {isStarted && (
+        {tutorial.videoUrl ? (
+          <video
+            className="w-full h-full object-cover"
+            controls
+            controlsList="nodownload"
+            poster={`${tutorial.videoUrl}?thumb=1`}
+          >
+            <source src={tutorial.videoUrl} type="video/mp4" />
+          </video>
+        ) : isStarted && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <div className="text-white text-center">
               <h4 className="font-bold mb-2">Tutorial in Progress</h4>
