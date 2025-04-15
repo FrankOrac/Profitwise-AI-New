@@ -16,7 +16,8 @@ export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   legacyHeaders: false,
-  standardHeaders: true
+  standardHeaders: true,
+  trustProxy: false
 });
 
 export const loginLimiter = rateLimit({
