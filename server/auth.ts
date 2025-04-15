@@ -144,6 +144,11 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Username and password are required" });
       }
 
+      if (!storage.sessionStore) {
+        console.error("Session store not initialized");
+        return res.status(500).json({ message: "Session store error" });
+      }
+
       passport.authenticate("local", (err, user, info) => {
         if (err) {
           console.error("Login error:", err);
