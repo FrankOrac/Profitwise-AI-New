@@ -27,7 +27,7 @@ export function useWebSocket(): WebSocketHook {
   const connect = useCallback(() => {
     if (!user?.id) return;
 
-    const ws = new WebSocket(`ws://0.0.0.0:5001?userId=${user.id}`);
+    const ws = new WebSocket(`ws://0.0.0.0:5000?userId=${user.id}`);
     wsRef.current = ws;
 
     ws.onopen = () => {

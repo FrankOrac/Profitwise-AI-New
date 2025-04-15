@@ -7,7 +7,10 @@ class WebSocketService {
   private clients: Map<string, WebSocket>;
 
   constructor() {
-    this.wss = new WebSocketServer({ port: 5001 });
+    this.wss = new WebSocketServer({ 
+      port: 5000,
+      host: '0.0.0.0'
+    });
     this.clients = new Map();
     this.initialize();
   }
