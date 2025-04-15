@@ -1,3 +1,4 @@
+
 import { WebSocketServer } from 'ws';
 import { Server } from 'http';
 import { verify } from '../auth';
@@ -19,21 +20,25 @@ export class WebSocketService {
           return;
         }
         console.log('WebSocket: Valid connection established');
-      console.log('Client connected');
+        console.log('Client connected');
 
-      ws.on('message', (message: string) => {
-        try {
-          const data = JSON.parse(message);
-          this.handleMessage(ws, data);
-        } catch (err) {
-          console.error('Invalid message format:', err);
-        }
-      });
+        ws.on('message', (message: string) => {
+          try {
+            const data = JSON.parse(message);
+            this.handleMessage(ws, data);
+          } catch (err) {
+            console.error('Invalid message format:', err);
+          }
+        });
 
-      ws.on('close', () => {
-        this.removeSubscriber(ws);
-        console.log('Client disconnected');
-      });
+        ws.on('close', () => {
+          this.removeSubscriber(ws);
+          console.log('Client disconnected');
+        });
+      } catch (error) {
+        console.error('WebSocket connection error:', error);
+        ws.close();
+      }
     });
 
     // Start price updates
