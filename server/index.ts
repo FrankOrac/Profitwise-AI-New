@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+app.set('trust proxy', true);
 import { createServer } from 'http';
 const server = createServer(app);
 import { WebSocketService } from './services/websocket';
