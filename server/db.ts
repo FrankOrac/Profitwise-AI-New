@@ -5,7 +5,11 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as schema from "@shared/schema";
 
 export const pool = new pg.Pool({
-  connectionString: 'postgresql://neondb_owner:npg_oHSaE2cIzq3K@ep-divine-recipe-a4rj9kah-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require',
+  user: 'postgres',
+  host: 'localhost',
+  database: 'profitwise',
+  password: 'postgres',
+  port: 5432,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
