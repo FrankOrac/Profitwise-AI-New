@@ -4,11 +4,6 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as schema from "@shared/schema";
 
-// Make sure we have a DATABASE_URL
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
-}
-
 export const pool = new pg.Pool({
   user: 'postgres',
   password: '12345678',

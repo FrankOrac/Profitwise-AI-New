@@ -14,7 +14,7 @@ localPort = 5000
 externalPort = 80
 
 [workflows]
-runButton = "Dev Server"
+runButton = "Dev Server New"
 
 [[workflows.workflow]]
 name = "Project"
@@ -56,3 +56,20 @@ args = "cd client && npm install && cd .."
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "NODE_ENV=development DATABASE_URL=postgres://postgres:postgres@localhost:5432/profitwise tsx --inspect server/index.ts"
+
+[[workflows.workflow]]
+name = "Dev Server New"
+author = 41537686
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm install"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd client && npm install && cd .."
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development DATABASE_URL=postgresql://postgres:12345678@localhost:5432/profitwise tsx --inspect server/index.ts"
