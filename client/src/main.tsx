@@ -10,7 +10,9 @@ import "./lib/chart-setup";
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </HelmetProvider>
   </QueryClientProvider>
 );

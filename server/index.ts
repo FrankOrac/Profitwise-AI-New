@@ -60,12 +60,35 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  // Global error handler
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Log error for debugging
+    console.error(`Error ${status} on ${req.method} ${req.path}:`, err);
 
-    res.status(status).json({ message });
-    throw err;
+    // Send safe error response to client
+    res.status(status).json({
+      status: 'error',
+      message: isProduction ? 'An unexpected error occurred' : err.message,
+      code: status,
+      ...(isProduction ? {} : { stack: err.stack })
+    });
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason: any) => {
+    console.error('Unhandled Promise Rejection:', reason);
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error: Error) => {
+    console.error('Uncaught Exception:', error);
+    // Give the server a grace period to finish pending requests
+    setTimeout(() => {
+      process.exit(1);
+    }, 1000);
   });
 
   // importantly only setup vite in development and after
