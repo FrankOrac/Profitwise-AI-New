@@ -1,5 +1,7 @@
 
-CREATE TABLE IF NOT EXISTS subscription_plans (
+-- Create subscription plans table first
+DROP TABLE IF EXISTS subscription_plans;
+CREATE TABLE subscription_plans (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT NOT NULL,

@@ -1,4 +1,3 @@
-
 import rateLimit from 'express-rate-limit';
 import ExpressBrute from 'express-brute';
 import helmet from 'helmet';
@@ -14,14 +13,18 @@ export const rateLimiter = rateLimit({
 });
 
 export const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // 30 requests per minute
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  legacyHeaders: false,
+  standardHeaders: true
 });
 
 export const loginLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour window
-  max: 5, // 5 failed attempts per hour
-  message: 'Too many login attempts, please try again after an hour'
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Too many login attempts, please try again later',
+  legacyHeaders: false,
+  standardHeaders: true
 });
 
 export const securityMiddleware = [
