@@ -289,7 +289,7 @@ function TutorialCard({ tutorial }: { tutorial: Tutorial }) {
   };
 
   return (
-    <Card>
+    <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <div className="aspect-video bg-slate-100 flex items-center justify-center relative">
         {tutorial.videoUrl ? (
           <video
@@ -350,7 +350,7 @@ function TutorialCard({ tutorial }: { tutorial: Tutorial }) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button 
-          className="w-full" 
+          className="w-full transition-colors duration-200 hover:bg-primary-600" 
           onClick={handleStartTutorial}
           variant={isStarted ? "secondary" : "default"}
         >
