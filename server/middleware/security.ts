@@ -8,8 +8,11 @@ const bruteforce = new ExpressBrute(store);
 
 export const rateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: 100,
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  trustProxy: false
 });
 
 export const apiLimiter = rateLimit({
@@ -25,7 +28,8 @@ export const loginLimiter = rateLimit({
   max: 5,
   message: 'Too many login attempts, please try again later',
   legacyHeaders: false,
-  standardHeaders: true
+  standardHeaders: true,
+  trustProxy: false
 });
 
 export const securityMiddleware = [
