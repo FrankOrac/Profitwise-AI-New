@@ -279,9 +279,27 @@ function Badge({ variant, children }: { variant?: string; children: React.ReactN
 }
 
 function TutorialCard({ tutorial }: { tutorial: Tutorial }) {
+  const [isStarted, setIsStarted] = useState(false);
+  const [progress, setProgress] = useState(tutorial.progress || 0);
+
+  const handleStartTutorial = () => {
+    setIsStarted(true);
+    // Save progress to backend in real implementation
+    setProgress(prev => Math.min(prev + 25, 100));
+  };
+
   return (
     <Card>
-      <div className="aspect-video bg-slate-100 flex items-center justify-center">
+      <div className="aspect-video bg-slate-100 flex items-center justify-center relative">
+        {isStarted && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="text-white text-center">
+              <h4 className="font-bold mb-2">Tutorial in Progress</h4>
+              <Progress value={progress} className="w-48 mb-4" />
+              <p>{progress}% Complete</p>
+            </div>
+          </div>
+        )}
         {tutorial.category === "Cryptocurrency" && (
           <Wallet className="h-10 w-10 text-primary-300" />
         )}
@@ -322,9 +340,13 @@ function TutorialCard({ tutorial }: { tutorial: Tutorial }) {
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full">
+        <Button 
+          className="w-full" 
+          onClick={handleStartTutorial}
+          variant={isStarted ? "secondary" : "default"}
+        >
           <Play className="h-4 w-4 mr-2" />
-          Watch Tutorial
+          {isStarted ? 'Continue Tutorial' : 'Start Tutorial'}
         </Button>
       </CardFooter>
     </Card>
