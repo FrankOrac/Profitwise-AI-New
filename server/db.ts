@@ -11,8 +11,8 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new pg.Pool({
   user: 'postgres',
-  password: 'postgres',
-  host: '0.0.0.0',
+  password: '12345678',
+  host: 'localhost',
   port: 5432,
   database: 'profitwise',
   max: 20,
