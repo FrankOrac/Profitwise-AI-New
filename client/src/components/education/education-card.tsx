@@ -1,68 +1,71 @@
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Button } from "@/components/ui/button";
-import { PlayCircle, Check } from "lucide-react";
-import { EducationalContent } from "@shared/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Clock, Star, Play, BookOpen } from 'lucide-react';
+import { EducationalContent } from '@shared/schema';
 
 interface EducationCardProps {
   content: EducationalContent;
+  onStart?: () => void;
 }
 
-export function EducationCard({ content }: EducationCardProps) {
-  const { mutate: updateProgress } = useMutation({
-    mutationFn: async (contentId: number) => {
-      const response = await fetch(`/api/education/${contentId}/progress`, {
-        method: 'POST'
-      });
-      if (!response.ok) throw new Error('Failed to update progress');
-      return response.json();
-    }
-  });
-
-  const handleStartContent = () => {
-    updateProgress(content.id);
-  };
-
+export function EducationCard({ content, onStart }: EducationCardProps) {
   return (
-    <Card className="overflow-hidden flex flex-col h-full">
-      <AspectRatio ratio={16/9} className="bg-slate-200 relative">
-        <img 
-          src={content.imageUrl || '/placeholder-image.jpg'} 
-          alt={content.title} 
-          className="w-full h-full object-cover" 
-        />
-        <div className="absolute top-2 right-2 bg-black/75 text-white text-xs px-2 py-1 rounded">
-          {content.duration}
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg">
+      <div className="aspect-video bg-slate-100 relative">
+        {content.imageUrl ? (
+          <img 
+            src={content.imageUrl} 
+            alt={content.title} 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <BookOpen className="h-12 w-12 text-slate-300" />
+          </div>
+        )}
+        {content.progress && content.progress > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2">
+            <Progress value={content.progress} className="h-1" />
+          </div>
+        )}
+      </div>
+      
+      <CardHeader className="p-4 pb-2">
+        <div className="flex items-center gap-2 mb-1">
+          <Badge>{content.category}</Badge>
+          <span className="text-xs text-slate-500">{content.difficulty}</span>
         </div>
-      </AspectRatio>
-      <div className="p-5 flex-1 flex flex-col">
-        <div className="text-xs text-primary-600 font-medium mb-2">{content.category}</div>
-        <h3 className="text-lg font-bold mb-2">{content.title}</h3>
-        <p className="text-sm text-slate-500 mb-4 flex-1">{content.description}</p>
-        <div className="flex items-center text-sm text-slate-500">
-          <PlayCircle className="h-4 w-4 mr-1.5" />
-          <span>{content.difficulty} • {content.duration}</span>
-        </div>
-        <div className="mt-4 flex items-center justify-between">
-          {content.progress && (
-            <div className="flex-1 mr-4">
-              <div className="h-2 bg-slate-200 rounded-full">
-                <div 
-                  className="h-2 bg-primary-600 rounded-full" 
-                  style={{ width: `${content.progress}%` }}
-                />
-              </div>
+        <h3 className="font-semibold text-lg leading-tight">{content.title}</h3>
+      </CardHeader>
+      
+      <CardContent className="p-4 pt-0">
+        <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+          {content.description}
+        </p>
+        <div className="flex items-center gap-4 text-sm text-slate-500">
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{content.duration}</span>
+          </div>
+          {content.rating && (
+            <div className="flex items-center gap-1">
+              <Star className="h-4 w-4 text-amber-400" />
+              <span>{content.rating}</span>
             </div>
           )}
-          <Button onClick={handleStartContent} size="sm">
-            {content.progress ? 'Continue' : 'Start'}
-          </Button>
         </div>
-      </div>
+      </CardContent>
+      
+      <CardFooter className="p-4 pt-0">
+        <Button className="w-full" onClick={onStart}>
+          <Play className="h-4 w-4 mr-2" />
+          {content.progress && content.progress > 0 ? 'Continue' : 'Start Learning'}
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
-
-export default EducationCard;
