@@ -136,10 +136,25 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
+  app.post("/api/login", async (req, res, next) => {
     try {
-      console.log("Login attempt for username:", req.body.username);
+      console.log("Login attempt:", {
+        username: req.body.username,
+        hasPassword: !!req.body.password,
+        sessionStore: !!storage.sessionStore,
+        dbConnected: !!storage.pool
+      });
+      
       res.setHeader('Content-Type', 'application/json');
+      
+      // Check database connection
+      try {
+        const dbCheck = await storage.pool.query('SELECT 1');
+        console.log("Database connection check:", dbCheck.rowCount === 1);
+      } catch (dbError) {
+        console.error("Database connection error:", dbError);
+        return res.status(500).json({ message: "Database connection error" });
+      }
       
       if (!req.body.username || !req.body.password) {
         return res.status(400).json({ message: "Username and password are required" });

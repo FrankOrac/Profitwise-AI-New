@@ -16,6 +16,15 @@ export const pool = new pg.Pool({
   connectionTimeoutMillis: 2000,
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected database error:', err);
+});
+
+// Add connection check
+pool.query('SELECT 1').catch(err => {
+  console.error('Initial database connection failed:', err);
+});
+
 // Create a Drizzle ORM instance
 export const db = drizzle(pool, { schema });
 

@@ -11,11 +11,14 @@ export class WebSocketService {
     this.wss = new WebSocketServer({ server });
 
     this.wss.on('connection', async (ws: any, req: any) => {
-      const token = req.url?.split('token=')[1];
-      if (!token || !await verify(token)) {
-        ws.close();
-        return;
-      }
+      try {
+        const token = req.url?.split('token=')[1];
+        if (!token || !await verify(token)) {
+          console.log('WebSocket: Invalid token connection attempt');
+          ws.close();
+          return;
+        }
+        console.log('WebSocket: Valid connection established');
       console.log('Client connected');
 
       ws.on('message', (message: string) => {

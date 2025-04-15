@@ -43,12 +43,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Login failed');
+      try {
+        const res = await apiRequest("POST", "/api/login", credentials);
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({ message: 'Invalid server response' }));
+          console.error('Login error:', error);
+          throw new Error(error.message || `Login failed: ${res.status}`);
+        }
+        const data = await res.json().catch(() => {
+          throw new Error('Invalid JSON response from server');
+        });
+        return data;
+      } catch (error) {
+        console.error('Login request error:', error);
+        throw error;
       }
-      return await res.json();
+    },
+    onError: (error: Error) => {
+      console.error('Login mutation error:', error);
+      toast({
+        title: "Login Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
