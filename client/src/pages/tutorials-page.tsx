@@ -1,23 +1,15 @@
-import { MobileSidebar } from "@/components/ui/mobile-sidebar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Helmet } from 'react-helmet';
+import { useState } from 'react';
+import { Search, Filter, Play, BookOpen, Clock, Star, ChevronRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import { MobileSidebar } from '@/components/ui/mobile-sidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { 
-  BookOpen, 
-  Clock, 
-  Film, 
-  Play, 
-  Search, 
-  Star, 
-  Medal,
-  Filter,
-  BarChart,
-  Wallet,
-  ArrowRight,
-  CreditCard
-} from "lucide-react";
-import { Helmet } from "react-helmet-async";
+import { Wallet, BarChart, CreditCard, Medal, Film } from "lucide-react";
+
 
 type Tutorial = {
   id: number;
@@ -30,10 +22,13 @@ type Tutorial = {
   videoUrl: string | null;
   instructor: string;
   rating: number;
+  progress?: number;
 };
 
 export default function TutorialsPage() {
-  // Mock data for tutorials
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   const tutorials: Tutorial[] = [
     {
       id: 1,
@@ -45,7 +40,8 @@ export default function TutorialsPage() {
       imageUrl: null,
       videoUrl: null,
       instructor: "Alex Morgan",
-      rating: 4.8
+      rating: 4.8,
+      progress: 0
     },
     {
       id: 2,
@@ -57,7 +53,8 @@ export default function TutorialsPage() {
       imageUrl: null,
       videoUrl: null,
       instructor: "Sarah Chen",
-      rating: 4.9
+      rating: 4.9,
+      progress: 0
     },
     {
       id: 3,
@@ -69,7 +66,8 @@ export default function TutorialsPage() {
       imageUrl: null,
       videoUrl: null,
       instructor: "David Johnson",
-      rating: 4.7
+      rating: 4.7,
+      progress: 0
     },
     {
       id: 4,
@@ -81,7 +79,8 @@ export default function TutorialsPage() {
       imageUrl: null,
       videoUrl: null,
       instructor: "Jennifer Wu",
-      rating: 4.6
+      rating: 4.6,
+      progress: 0
     },
     {
       id: 5,
@@ -93,7 +92,8 @@ export default function TutorialsPage() {
       imageUrl: null,
       videoUrl: null,
       instructor: "Michael Thompson",
-      rating: 4.5
+      rating: 4.5,
+      progress: 0
     },
     {
       id: 6,
@@ -105,20 +105,29 @@ export default function TutorialsPage() {
       imageUrl: null,
       videoUrl: null,
       instructor: "Emma Rodriguez",
-      rating: 4.9
+      rating: 4.9,
+      progress: 0
     }
   ];
-  
-  const categories = [
-    { name: "Cryptocurrency", icon: <Wallet className="h-4 w-4" /> },
-    { name: "Technical Analysis", icon: <BarChart className="h-4 w-4" /> },
-    { name: "DeFi", icon: <CreditCard className="h-4 w-4" /> },
-    { name: "Risk Management", icon: <Medal className="h-4 w-4" /> },
-    { name: "NFTs", icon: <BookOpen className="h-4 w-4" /> },
-    { name: "Algorithmic Trading", icon: <Film className="h-4 w-4" /> }
-  ];
-  
-  const featuredTutorial = tutorials[1]; // Technical Analysis Fundamentals
+
+  const filteredTutorials = tutorials.filter(tutorial => 
+    (!searchQuery || tutorial.title.toLowerCase().includes(searchQuery.toLowerCase())) &&
+    (!selectedCategory || tutorial.category === selectedCategory)
+  );
+
+  const featuredTutorial: Tutorial = {
+    id: 2, //changed to a tutorial with image capability
+    title: "Technical Analysis Fundamentals",
+    description: "Learn the fundamentals of technical analysis and chart patterns",
+    category: "Technical Analysis",
+    difficulty: "Beginner",
+    duration: "45 min",
+    imageUrl: "/tutorials/technical-analysis.jpg", // needs to be an actual image file
+    videoUrl: "https://example.com/video",
+    instructor: "Sarah Johnson",
+    rating: 4.8,
+    progress: 30
+  };
 
   return (
     <>
@@ -138,115 +147,118 @@ export default function TutorialsPage() {
                     <Input 
                       placeholder="Search tutorials..." 
                       className="pl-10 w-64"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" onClick={() => setSelectedCategory(null)}>
                     <Filter className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              
-              <Card className="mb-8 overflow-hidden">
+
+              <Card className="mb-8">
                 <div className="grid md:grid-cols-2">
                   <div className="p-6 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge featuredTutorial={featuredTutorial} />
+                      <Badge variant="secondary">{featuredTutorial.category}</Badge>
                       <span className="text-sm text-slate-500">{featuredTutorial.difficulty}</span>
                     </div>
                     <h2 className="text-2xl font-bold mb-2">{featuredTutorial.title}</h2>
                     <p className="text-slate-600 mb-4">{featuredTutorial.description}</p>
-                    <div className="flex items-center gap-6 mb-6">
+                    <div className="flex items-center gap-4 mb-4">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-slate-400" />
-                        <span className="text-sm">{featuredTutorial.duration}</span>
+                        <span className="text-sm text-slate-600">{featuredTutorial.duration}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-amber-500" />
-                        <span className="text-sm">{featuredTutorial.rating}/5</span>
+                        <Star className="h-4 w-4 text-yellow-400" />
+                        <span className="text-sm text-slate-600">{featuredTutorial.rating}</span>
                       </div>
-                      <div className="text-sm">By {featuredTutorial.instructor}</div>
                     </div>
-                    <Button className="w-fit">
-                      <Play className="h-4 w-4 mr-2" />
-                      Watch Now
-                    </Button>
-                  </div>
-                  <div className="bg-slate-100 flex items-center justify-center p-10">
-                    <div className="h-36 w-36 rounded-full bg-primary-100 flex items-center justify-center">
-                      <BarChart className="h-16 w-16 text-primary-600" />
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Progress</span>
+                        <span>{featuredTutorial.progress}%</span>
+                      </div>
+                      <Progress value={featuredTutorial.progress} />
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button className="flex-1">
+                        <Play className="h-4 w-4 mr-2" />
+                        Continue Learning
+                      </Button>
+                      <Button variant="outline" className="flex-1">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
                     </div>
                   </div>
+                  {featuredTutorial.imageUrl && (
+                    <div className="relative h-64 md:h-auto">
+                      <img 
+                        src={featuredTutorial.imageUrl} 
+                        alt={featuredTutorial.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
               </Card>
-              
+
               <div className="mb-8">
                 <h2 className="text-xl font-bold mb-4">Popular Categories</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  {categories.map((category) => (
-                    <Card key={category.name} className="cursor-pointer hover:border-primary-300 transition-colors">
-                      <CardContent className="p-6 flex flex-col items-center text-center">
-                        <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center mb-3">
-                          {category.icon}
-                        </div>
-                        <h3 className="font-medium">{category.name}</h3>
-                      </CardContent>
-                    </Card>
+                  {[{ name: "Cryptocurrency", icon: <Wallet className="h-4 w-4" /> },
+                  { name: "Technical Analysis", icon: <BarChart className="h-4 w-4" /> },
+                  { name: "DeFi", icon: <CreditCard className="h-4 w-4" /> },
+                  { name: "Risk Management", icon: <Medal className="h-4 w-4" /> },
+                  { name: "NFTs", icon: <BookOpen className="h-4 w-4" /> },
+                  { name: "Algorithmic Trading", icon: <Film className="h-4 w-4" /> }].map((category) => (
+                    <Button key={category.name} variant="ghost" className="w-full" onClick={() => setSelectedCategory(category.name)}>
+                      <div className="flex items-center justify-center gap-2">
+                        {category.icon}
+                        {category.name}
+                      </div>
+                    </Button>
                   ))}
                 </div>
               </div>
-              
+
+
               <Tabs defaultValue="all">
-                <div className="flex justify-between items-center mb-4">
-                  <TabsList>
-                    <TabsTrigger value="all">All Tutorials</TabsTrigger>
-                    <TabsTrigger value="beginner">Beginner</TabsTrigger>
-                    <TabsTrigger value="intermediate">Intermediate</TabsTrigger>
-                    <TabsTrigger value="advanced">Advanced</TabsTrigger>
-                  </TabsList>
-                  <Button variant="ghost" className="text-primary-600">
-                    View All
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-                
+                <TabsList>
+                  <TabsTrigger value="all">All Tutorials</TabsTrigger>
+                  <TabsTrigger value="beginner">Beginner</TabsTrigger>
+                  <TabsTrigger value="intermediate">Intermediate</TabsTrigger>
+                  <TabsTrigger value="advanced">Advanced</TabsTrigger>
+                </TabsList>
                 <TabsContent value="all" className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tutorials.map((tutorial) => (
+                    {filteredTutorials.map((tutorial) => (
                       <TutorialCard key={tutorial.id} tutorial={tutorial} />
                     ))}
                   </div>
                 </TabsContent>
-                
                 <TabsContent value="beginner" className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tutorials
-                      .filter(tutorial => tutorial.difficulty === "Beginner")
-                      .map((tutorial) => (
-                        <TutorialCard key={tutorial.id} tutorial={tutorial} />
-                      ))
-                    }
+                    {filteredTutorials.filter(tutorial => tutorial.difficulty === "Beginner").map((tutorial) => (
+                      <TutorialCard key={tutorial.id} tutorial={tutorial} />
+                    ))}
                   </div>
                 </TabsContent>
-                
                 <TabsContent value="intermediate" className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tutorials
-                      .filter(tutorial => tutorial.difficulty === "Intermediate")
-                      .map((tutorial) => (
-                        <TutorialCard key={tutorial.id} tutorial={tutorial} />
-                      ))
-                    }
+                    {filteredTutorials.filter(tutorial => tutorial.difficulty === "Intermediate").map((tutorial) => (
+                      <TutorialCard key={tutorial.id} tutorial={tutorial} />
+                    ))}
                   </div>
                 </TabsContent>
-                
                 <TabsContent value="advanced" className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tutorials
-                      .filter(tutorial => tutorial.difficulty === "Advanced")
-                      .map((tutorial) => (
-                        <TutorialCard key={tutorial.id} tutorial={tutorial} />
-                      ))
-                    }
+                    {filteredTutorials.filter(tutorial => tutorial.difficulty === "Advanced").map((tutorial) => (
+                      <TutorialCard key={tutorial.id} tutorial={tutorial} />
+                    ))}
                   </div>
                 </TabsContent>
               </Tabs>
@@ -258,10 +270,10 @@ export default function TutorialsPage() {
   );
 }
 
-function Badge({ featuredTutorial }: { featuredTutorial: Tutorial }) {
+function Badge({ variant, children }: { variant?: string; children: React.ReactNode }) {
   return (
-    <span className="text-xs font-medium py-1 px-2 rounded-full bg-primary-100 text-primary-700">
-      {featuredTutorial.category}
+    <span className={`text-xs font-medium py-1 px-2 rounded-full ${variant === 'secondary' ? 'bg-primary-100 text-primary-700' : 'bg-primary-200 text-primary-800'}`}>
+      {children}
     </span>
   );
 }
@@ -291,9 +303,7 @@ function TutorialCard({ tutorial }: { tutorial: Tutorial }) {
       </div>
       <CardHeader className="p-4 pb-2">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-medium py-0.5 px-2 rounded-full bg-primary-100 text-primary-700">
-            {tutorial.category}
-          </span>
+          <Badge variant="secondary">{tutorial.category}</Badge>
           <span className="text-xs text-slate-500">{tutorial.difficulty}</span>
         </div>
         <CardTitle className="text-lg">{tutorial.title}</CardTitle>
