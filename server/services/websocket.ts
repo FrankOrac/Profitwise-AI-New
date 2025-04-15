@@ -1,111 +1,85 @@
-
-import { WebSocketServer } from 'ws';
-import { Server } from 'http';
-import { verify } from '../auth';
+import { WebSocket, WebSocketServer } from 'ws';
 import { marketData } from './market-data';
+import { storage } from '../storage';
 
-export class WebSocketService {
+class WebSocketService {
   private wss: WebSocketServer;
-  private subscriptions: Map<string, Set<WebSocket>> = new Map();
+  private clients: Map<string, WebSocket>;
 
-  constructor(server: Server) {
-    this.wss = new WebSocketServer({ server });
+  constructor() {
+    this.wss = new WebSocketServer({ port: 5001 });
+    this.clients = new Map();
+    this.initialize();
+  }
 
-    this.wss.on('connection', async (ws: any, req: any) => {
-      try {
-        const token = req.url?.split('token=')[1];
-        if (!token || !await verify(token)) {
-          console.log('WebSocket: Invalid token connection attempt');
-          ws.close();
-          return;
-        }
-        console.log('WebSocket: Valid connection established');
-        console.log('Client connected');
+  private initialize() {
+    this.wss.on('connection', (ws, req) => {
+      const userId = this.extractUserId(req.url);
+      if (userId) {
+        this.clients.set(userId, ws);
 
-        ws.on('message', (message: string) => {
-          try {
-            const data = JSON.parse(message);
-            this.handleMessage(ws, data);
-          } catch (err) {
-            console.error('Invalid message format:', err);
-          }
+        ws.on('message', async (message) => {
+          const data = JSON.parse(message.toString());
+          await this.handleMessage(userId, data);
         });
 
         ws.on('close', () => {
-          this.removeSubscriber(ws);
-          console.log('Client disconnected');
+          this.clients.delete(userId);
         });
-      } catch (error) {
-        console.error('WebSocket connection error:', error);
-        ws.close();
       }
     });
-
-    // Start price updates
-    setInterval(() => {
-      this.broadcastPriceUpdates();
-    }, 1000);
   }
 
-  private handleMessage(ws: any, data: any) {
-    // Handle different message types
+  private extractUserId(url: string | undefined): string | null {
+    if (!url) return null;
+    const params = new URLSearchParams(url.split('?')[1]);
+    return params.get('userId');
+  }
+
+  private async handleMessage(userId: string, data: any) {
     switch (data.type) {
-      case 'subscribe':
-        this.subscribe(data.channel, ws);
-        console.log('Client subscribed to:', data.channel);
+      case 'SUBSCRIBE_PRICE':
+        await this.handlePriceSubscription(userId, data.symbols);
         break;
-      case 'unsubscribe':
-        this.unsubscribe(data.channel, ws);
-        console.log('Client unsubscribed from:', data.channel);
+      case 'SUBSCRIBE_TRADES':
+        await this.handleTradeSubscription(userId);
         break;
-      default:
-        console.log('Unknown message type:', data.type);
     }
   }
 
-  private subscribe(channel: string, ws: WebSocket) {
-    if (!this.subscriptions.has(channel)) {
-      this.subscriptions.set(channel, new Set());
-    }
-    this.subscriptions.get(channel)?.add(ws);
+  private async handlePriceSubscription(userId: string, symbols: string[]) {
+    const prices = await marketData.getQuotes(symbols);
+    this.sendToUser(userId, {
+      type: 'PRICE_UPDATE',
+      data: prices
+    });
   }
 
-  private unsubscribe(channel: string, ws: WebSocket) {
-    this.subscriptions.get(channel)?.delete(ws);
+  private async handleTradeSubscription(userId: string) {
+    const trades = await storage.getRecentTrades(userId);
+    this.sendToUser(userId, {
+      type: 'TRADE_UPDATE',
+      data: trades
+    });
   }
 
-  private removeSubscriber(ws: WebSocket) {
-    for (const subscribers of this.subscriptions.values()) {
-      subscribers.delete(ws);
-    }
-  }
-
-  private async broadcastPriceUpdates() {
-    for (const [channel, subscribers] of this.subscriptions.entries()) {
-      if (channel.startsWith('price:')) {
-        const symbol = channel.split(':')[1];
-        const price = await marketData.getQuote(symbol);
-
-        const message = JSON.stringify({
-          type: 'price',
-          symbol,
-          price
-        });
-
-        subscribers.forEach(ws => {
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(message);
-          }
-        });
-      }
+  public sendToUser(userId: string, data: any) {
+    const client = this.clients.get(userId);
+    if (client && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(data));
     }
   }
 
-  public broadcast(channel: string, data: any) {
-    this.wss.clients.forEach((client) => {
-      if (client.readyState === 1) { // OPEN
-        client.send(JSON.stringify({ channel, data }));
+  public broadcastMarketUpdate(symbol: string, price: number) {
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'MARKET_UPDATE',
+          data: { symbol, price }
+        }));
       }
     });
   }
 }
+
+export const websocketService = new WebSocketService();

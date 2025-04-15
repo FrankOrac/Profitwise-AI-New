@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface MarketData {
@@ -45,7 +44,7 @@ export function useWebSocket(url: string): WebSocketHook {
       try {
         const data = JSON.parse(event.data);
         setLastMessage(data);
-        
+
         if (data.type === 'price_update') {
           setMarketData(prev => ({
             ...prev,
@@ -106,3 +105,44 @@ export function useWebSocket(url: string): WebSocketHook {
     unsubscribe
   };
 }
+
+// The following code was an attempt to integrate a simpler WebSocket hook, but it was incomplete and didn't replace the original functionality.  
+// It's left here as a record of the attempted change.
+
+// import { useEffect, useRef, useCallback } from 'react';
+// import { useAuth } from './use-auth';
+
+// export function useWebSocket() {
+//   const ws = useRef<WebSocket | null>(null);
+//   const { user } = useAuth();
+
+//   const connect = useCallback(() => {
+//     if (!user?.id) return;
+
+//     ws.current = new WebSocket(`ws://0.0.0.0:5001?userId=${user.id}`);
+
+//     ws.current.onopen = () => {
+//       console.log('WebSocket Connected');
+//     };
+
+//     ws.current.onclose = () => {
+//       console.log('WebSocket Disconnected');
+//       setTimeout(connect, 1000);
+//     };
+//   }, [user?.id]);
+
+//   const subscribe = useCallback((type: string, data: any) => {
+//     if (ws.current?.readyState === WebSocket.OPEN) {
+//       ws.current.send(JSON.stringify({ type, ...data }));
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     connect();
+//     return () => {
+//       ws.current?.close();
+//     };
+//   }, [connect]);
+
+//   return { subscribe };
+// }
