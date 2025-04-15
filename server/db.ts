@@ -16,9 +16,19 @@ pool.on('error', (err) => {
 });
 
 // Add connection check
-pool.query('SELECT 1').catch(err => {
-  console.error('Initial database connection failed:', err);
-});
+pool.query('SELECT 1')
+  .then(() => {
+    console.log('Database connection successful');
+  })
+  .catch(err => {
+    console.error('Initial database connection failed:', err);
+    console.error('Connection details:', {
+      host: pool.options.host,
+      database: pool.options.database,
+      user: pool.options.user,
+      ssl: pool.options.ssl
+    });
+  });
 
 // Create a Drizzle ORM instance
 export const db = drizzle(pool, { schema });

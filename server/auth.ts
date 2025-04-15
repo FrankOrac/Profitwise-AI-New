@@ -246,17 +246,23 @@ export function setupAuth(app: Express) {
     const adminUser = await storage.getUserByUsername("admin");
 
     if (!adminUser) {
-      const admin = {
-        username: "admin",
-        password: await hashPassword("admin123"),
-        email: "admin@profitwise.ai",
-        firstName: "Admin",
-        lastName: "User",
-      };
+      try {
+        const admin = {
+          username: "admin",
+          password: await hashPassword("admin123"),
+          email: "admin@profitwise.ai",
+          firstName: "Admin",
+          lastName: "User",
+        };
 
-      const user = await storage.createUser(admin);
-      await storage.updateUser(user.id, { role: "admin" });
-      console.log("Admin user created with username: admin and password: admin123");
+        const user = await storage.createUser(admin);
+        await storage.updateUser(user.id, { role: "admin" });
+        console.log("Admin user created with username: admin and password: admin123");
+      } catch (error) {
+        console.error("Failed to create admin user:", error);
+      }
     }
-  })();
+  })().catch(error => {
+    console.error("Auth initialization error:", error);
+  });
 }
