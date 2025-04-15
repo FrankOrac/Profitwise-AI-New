@@ -19,12 +19,12 @@ app.use(securityMiddleware);
 app.use('/api/login', loginLimiter);
 app.use('/api', apiLimiter);
 
-// Initialize WebSocket service
 // Initialize database before starting server
 import { initializeDatabase } from './db';
 await initializeDatabase();
 
-const wsService = new WebSocketService(server);
+// Initialize WebSocket service
+const wsService = new WebSocketService();
 export { wsService };
 
 app.use((req, res, next) => {

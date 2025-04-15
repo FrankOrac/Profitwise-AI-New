@@ -82,4 +82,4 @@ class WebSocketService {
   }
 }
 
-export const websocketService = new WebSocketService();
+export { WebSocketService };
