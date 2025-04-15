@@ -60,7 +60,7 @@ import { TwoFactorService } from './services/two-factor';
 export function setupAuth(app: Express) {
   // Apply security middleware
   app.use(securityMiddleware);
-  
+
   const sessionSettings: session.SessionOptions = {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
@@ -178,9 +178,9 @@ export function setupAuth(app: Express) {
         sessionStore: !!storage.sessionStore,
         dbConnected: !!storage.pool
       });
-      
+
       res.setHeader('Content-Type', 'application/json');
-      
+
       // Check database connection
       try {
         const dbCheck = await storage.pool.query('SELECT 1');
@@ -189,7 +189,7 @@ export function setupAuth(app: Express) {
         console.error("Database connection error:", dbError);
         return res.status(500).json({ message: "Database connection error" });
       }
-      
+
       if (!req.body.username || !req.body.password) {
         return res.status(400).json({ message: "Username and password are required" });
       }
@@ -204,7 +204,7 @@ export function setupAuth(app: Express) {
           console.error("Login error:", err);
           return res.status(500).json({ message: "Internal server error" });
         }
-        
+
         if (!user) {
           return res.status(401).json({ message: "Invalid username or password" });
         }
@@ -214,15 +214,15 @@ export function setupAuth(app: Express) {
             console.error("Session error:", loginErr);
             return res.status(500).json({ message: "Failed to create session" });
           }
-          
+
           return res.json({
             id: user.id,
             username: user.username,
             email: user.email,
-          role: user.role
+            role: user.role
+          });
         });
-      });
-    })(req, res, next);
+      })(req, res, next);
     } catch (error) {
       console.error("Unexpected login error:", error);
       return res.status(500).json({ message: "An unexpected error occurred" });

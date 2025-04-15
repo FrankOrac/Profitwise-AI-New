@@ -9,7 +9,14 @@ import { WebSocketService } from './services/websocket';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.urlencoded({ extended: false }));
+
+// Import security middleware
+import { securityMiddleware, loginLimiter, apiLimiter } from './middleware/security';
+
+// Apply security middleware
+app.use(securityMiddleware);
+app.use('/api/login', loginLimiter);
+app.use('/api', apiLimiter);
 
 // Initialize WebSocket service
 // Initialize database before starting server
