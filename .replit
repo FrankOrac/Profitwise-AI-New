@@ -72,4 +72,4 @@ args = "cd client && npm install && cd .."
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "NODE_ENV=development DATABASE_URL=postgresql://postgres:12345678@localhost:5432/profitwise tsx --inspect server/index.ts"
+args = "NODE_ENV=development DATABASE_URL=postgresql://neondb_owner:npg_oHSaE2cIzq3K@ep-divine-recipe-a4rj9kah-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require tsx --inspect server/index.ts"
