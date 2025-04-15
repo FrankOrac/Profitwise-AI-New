@@ -5,10 +5,10 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as schema from "@shared/schema";
 
 export const pool = new pg.Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'profitwise',
-  password: 'postgres',
+  user: process.env.NODE_ENV === 'production' ? 'your_prod_user' : 'postgres',
+  host: process.env.NODE_ENV === 'production' ? 'your_prod_host' : 'localhost',
+  database: process.env.NODE_ENV === 'production' ? 'your_prod_db' : 'profitwise',
+  password: process.env.NODE_ENV === 'production' ? 'your_prod_password' : 'postgres',
   port: 5432,
   max: 20,
   idleTimeoutMillis: 30000,
