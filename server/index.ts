@@ -8,6 +8,7 @@ const server = createServer(app);
 import { WebSocketService } from './services/websocket';
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: false }));
 
 // Initialize WebSocket service

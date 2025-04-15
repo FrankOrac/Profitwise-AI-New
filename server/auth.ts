@@ -139,6 +139,7 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req, res, next) => {
     try {
       console.log("Login attempt for username:", req.body.username);
+      res.setHeader('Content-Type', 'application/json');
       
       if (!req.body.username || !req.body.password) {
         return res.status(400).json({ message: "Username and password are required" });
