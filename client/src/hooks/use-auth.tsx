@@ -75,13 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       window.location.href = "/home";
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
   });
 
   const registerMutation = useMutation({

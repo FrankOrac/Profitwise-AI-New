@@ -10,7 +10,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 export const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@0.0.0.0:5432/profitwise',
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
