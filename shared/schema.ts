@@ -12,7 +12,11 @@ export const users = pgTable("users", {
   lastName: text("last_name"),
   role: text("role").default("user").notNull(),
   subscriptionTier: text("subscription_tier").default("basic").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  twoFactorSecret: text('two_factor_secret'),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  lastLoginAttempt: timestamp('last_login_attempt'),
+  loginAttempts: integer('login_attempts').default(0),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({

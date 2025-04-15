@@ -54,8 +54,17 @@ export const verify = async (token: string) => {
   }
 };
 
+import { securityMiddleware, loginLimiter } from './middleware/security';
+import { TwoFactorService } from './services/two-factor';
+
 export function setupAuth(app: Express) {
+  // Apply security middleware
+  app.use(securityMiddleware);
+  
   const sessionSettings: session.SessionOptions = {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'strict',
     secret: process.env.SESSION_SECRET || "profitwise-ai-secret",
     resave: false,
     saveUninitialized: false,
@@ -136,7 +145,32 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", async (req, res, next) => {
+  app.post("/api/2fa/setup", authenticateUser, async (req, res) => {
+    try {
+      const { secret, qrCode } = await TwoFactorService.generateSecret(req.user!.id);
+      res.json({ secret, qrCode });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to setup 2FA" });
+    }
+  });
+
+  app.post("/api/2fa/verify", authenticateUser, async (req, res) => {
+    try {
+      const isValid = await TwoFactorService.verifyToken(req.user!.id, req.body.token);
+      if (isValid) {
+        await db.update(users)
+          .set({ twoFactorEnabled: true })
+          .where(eq(users.id, req.user!.id));
+        res.json({ success: true });
+      } else {
+        res.status(401).json({ message: "Invalid 2FA token" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to verify 2FA token" });
+    }
+  });
+
+  app.post("/api/login", loginLimiter, async (req, res, next) => {
     try {
       console.log("Login attempt:", {
         username: req.body.username,
