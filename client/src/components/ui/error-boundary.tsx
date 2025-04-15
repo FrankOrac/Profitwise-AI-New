@@ -23,6 +23,13 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Report to error tracking service if needed
+    this.setState({ hasError: true, error });
+
+    // Attempt recovery
+    setTimeout(() => {
+      this.setState({ hasError: false });
+    }, 5000);
   }
 
   render() {

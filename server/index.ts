@@ -62,19 +62,40 @@ app.use((req, res, next) => {
 
   // Global error handler
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const isProduction = process.env.NODE_ENV === 'production';
-    
-    // Log error for debugging
-    console.error(`Error ${status} on ${req.method} ${req.path}:`, err);
+    try {
+      const status = err.status || err.statusCode || 500;
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      // Log error for debugging
+      console.error(`Error ${status} on ${req.method} ${req.path}:`, err);
 
-    // Send safe error response to client
-    res.status(status).json({
-      status: 'error',
-      message: isProduction ? 'An unexpected error occurred' : err.message,
-      code: status,
-      ...(isProduction ? {} : { stack: err.stack })
-    });
+      // Send safe error response to client
+      res.status(status).json({
+        status: 'error',
+        message: isProduction ? 'An unexpected error occurred' : err.message,
+        code: status,
+        ...(isProduction ? {} : { stack: err.stack })
+      });
+    } catch (handlerError) {
+      console.error('Error in error handler:', handlerError);
+      res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    }
+  });
+
+  // Fallback handler for unhandled errors
+  app.use((req: Request, res: Response) => {
+    res.status(404).json({ status: 'error', message: 'Not Found' });
+  });
+
+  // Process error handlers
+  process.on('uncaughtException', (error: Error) => {
+    console.error('Uncaught Exception:', error);
+    // Keep the process running
+  });
+
+  process.on('unhandledRejection', (reason: any) => {
+    console.error('Unhandled Rejection:', reason);
+    // Keep the process running
   });
 
   // Handle unhandled promise rejections

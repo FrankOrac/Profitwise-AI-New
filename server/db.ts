@@ -19,20 +19,38 @@ pool.on('error', (err) => {
   console.error('Unexpected database error:', err);
 });
 
-// Add connection check
-pool.query('SELECT 1')
-  .then(() => {
-    console.log('Database connection successful');
-  })
-  .catch(err => {
-    console.error('Initial database connection failed:', err);
-    console.error('Connection details:', {
-      host: pool.options.host,
-      database: pool.options.database,
-      user: pool.options.user,
-      ssl: pool.options.ssl
-    });
-  });
+// Add connection check with retry mechanism
+async function checkConnection(retries = 5, delay = 5000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await pool.query('SELECT 1');
+      console.log('Database connection successful');
+      return true;
+    } catch (err) {
+      console.error(`Database connection attempt ${i + 1} failed:`, err);
+      console.error('Connection details:', {
+        host: pool.options.host,
+        database: pool.options.database,
+        user: pool.options.user,
+        ssl: pool.options.ssl
+      });
+      if (i < retries - 1) {
+        console.log(`Retrying in ${delay/1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  console.log('Continuing without database connection...');
+  return false;
+}
+
+checkConnection();
+
+// Add reconnection handling
+pool.on('error', (err) => {
+  console.error('Unexpected database error:', err);
+  checkConnection();
+});
 
 // Create a Drizzle ORM instance
 export const db = drizzle(pool, { schema });
