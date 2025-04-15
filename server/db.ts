@@ -26,7 +26,7 @@ pool.on('error', (err) => {
 
 // Add connection check
 pool.query('SELECT 1').catch(err => {
-  console.warn('Database connection failed, continuing in mock mode:', err);
+  console.error('Initial database connection failed:', err);
 });
 
 // Create a Drizzle ORM instance
@@ -38,19 +38,16 @@ export async function runMigrations() {
     await migrate(db, { migrationsFolder: './migrations' });
     console.log('Migrations completed successfully');
   } catch (error) {
-    console.warn('Skipping migrations:', error);
+    console.error('Error running migrations:', error);
+    throw error;
   }
 }
 
 // Initialize database
 export async function initializeDatabase() {
-  try {
-    await runMigrations();
-    if (process.env.NODE_ENV === 'development') {
-      // Run seeder in development
-      await import('./seed');
-    }
-  } catch (error) {
-    console.warn('Database initialization skipped:', error);
+  await runMigrations();
+  if (process.env.NODE_ENV === 'development') {
+    // Run seeder in development
+    await import('./seed');
   }
 }
