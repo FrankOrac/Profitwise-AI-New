@@ -12,6 +12,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: false }));
 
 // Initialize WebSocket service
+// Initialize database before starting server
+import { initializeDatabase } from './db';
+await initializeDatabase();
+
 const wsService = new WebSocketService(server);
 export { wsService };
 
