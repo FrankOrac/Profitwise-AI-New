@@ -15,13 +15,16 @@ import {
   BookOpen,
   RefreshCw,
   LineChart,
-  PencilLine
+  PencilLine,
+  Menu,
+  X
 } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
 export default function LandingPage() {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const features = [
     { icon: <Brain />, title: "AI-Powered Insights", description: "Advanced algorithms analyze market trends" },
@@ -64,16 +67,31 @@ export default function LandingPage() {
             <TrendingUp className="h-6 w-6 text-primary-600" />
             <span className="text-2xl font-bold">ProfitWise AI</span>
           </div>
-          <div className="hidden md:flex items-center space-x-6">
-            <a href="#features" className="text-slate-600 hover:text-primary-600">Features</a>
-            <a href="#how-it-works" className="text-slate-600 hover:text-primary-600">How it Works</a>
-            <a href="#testimonials" className="text-slate-600 hover:text-primary-600">Testimonials</a>
-            <Link href="/auth">
-              <Button variant="ghost">Login</Button>
-            </Link>
-            <Link href="/auth">
-              <Button>Get Started</Button>
-            </Link>
+          <div className="md:flex items-center space-x-6">
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden">
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+            <div className="hidden md:flex items-center space-x-6">
+              <a href="#features" className="text-slate-600 hover:text-primary-600">Features</a>
+              <a href="#how-it-works" className="text-slate-600 hover:text-primary-600">How it Works</a>
+              <a href="#testimonials" className="text-slate-600 hover:text-primary-600">Testimonials</a>
+              <Link href="/auth">
+                <Button variant="ghost">Login</Button>
+              </Link>
+              <Link href="/auth">
+                <Button>Get Started</Button>
+              </Link>
+            </div>
+          </div>
+          {/* Mobile Menu */}
+          <div className={`md:hidden absolute top-12 right-6 bg-white shadow-md rounded-md p-4 ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
+            <ul className="space-y-4">
+              <li><a href="#features" className="text-slate-600 hover:text-primary-600">Features</a></li>
+              <li><a href="#how-it-works" className="text-slate-600 hover:text-primary-600">How it Works</a></li>
+              <li><a href="#testimonials" className="text-slate-600 hover:text-primary-600">Testimonials</a></li>
+              <li><Link href="/auth"><Button variant="ghost" size="sm">Login</Button></Link></li>
+              <li><Link href="/auth"><Button size="sm">Get Started</Button></Link></li>
+            </ul>
           </div>
         </div>
       </nav>
